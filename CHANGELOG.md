@@ -4,6 +4,33 @@ Semua perubahan pada proyek ini dicatat di sini, dengan entri terbaru di atas, a
 
 ## 2026-11-06
 
+### US-003: Melihat detail entitas
+
+- **Jenis:** Added
+- **Apa:** Memilih marker membuka panel berisi nama, jenis, status, deskripsi, atribut, koordinat, serta waktu dibuat dan diperbarui. Panel ditutup dengan tombol atau `Esc`, dan menangani keadaan memuat, tidak ditemukan, serta gagal. API `GET /api/v1/entities/{id}` membalas 404 untuk entitas yang tidak ada dan 400 untuk ID yang bukan UUID.
+- **Bagaimana:** Panel melayang di atas peta agar ukuran peta tidak berubah, dan selalu mengambil data terbaru dari API. Marker terpilih tampil lebih besar dan bercincin. Fokus keyboard berpindah ke tombol tutup, lalu kembali ke marker.
+- **File utama:** `backend/internal/store/entity_store.go`, `backend/internal/httpapi/entity_handler.go`, `frontend/src/features/entities/components/EntityDetailPanel.tsx`, `frontend/src/features/entities/EntitiesPage.tsx`
+- **Jejak:** US-003, FR-3, OpenSpec `add-entity-detail`, branch `feat/us-003-entity-detail`
+- **Pengujian:** Test Go termasuk integrasi pada PostgreSQL 18 dengan PostGIS 3.6, 59 test Vitest, dan 12 test Playwright terhadap build produksi lulus. Panel diperiksa dengan data dan tile asli pada ukuran desktop di Chromium dan ukuran ponsel di Edge. Di `chromium-headless-shell`, peta tampil abu-abu saat panel terbuka di ukuran ponsel; hal ini tidak muncul di Edge, sehingga dianggap artefak browser uji. **Belum terbukti:** nginx dan PostgreSQL 17 dengan PostGIS 3.7 menunggu CI. Pada zoom rendah, marker yang bertumpuk sulit dipilih, dan di ponsel panel dapat menutupi marker terpilih.
+
+### Proteksi `main` dan auto-merge
+
+- **Jenis:** Changed
+- **Apa:** Pull Request kini masuk ke `main` secara otomatis setelah `CI success` lulus, tanpa approval wajib. PR dengan CI gagal tertahan.
+- **Bagaimana:** Auto-merge diaktifkan di setting repository, dan proteksi `main` mewajibkan `CI success` serta melarang force push dan penghapusan branch. Admin masih dapat melewatinya bila darurat.
+- **File utama:** `CLAUDE.md`, `docs/WORKFLOW.md`, `docs/AI_USAGE.md`, setting repository di GitHub
+- **Jejak:** Keputusan pemilik proyek. PR #4 tertahan oleh aturan ini saat `End-to-end` gagal
+- **Pengujian:** Setting dibaca kembali dari GitHub API. PR #4 tertahan saat CI gagal, lalu masuk otomatis saat CI lulus.
+
+### US-002: Bukti CI
+
+- **Jenis:** Changed
+- **Apa:** US-002 selesai, dan change OpenSpec-nya diarsipkan.
+- **Bagaimana:** CI pada PR #4 membuktikan peta dan worker berjalan di belakang CSP nginx pada Compose, dengan PostgreSQL 17 dan PostGIS 3.7.
+- **File utama:** `openspec/specs/entity-map-view/spec.md`, `openspec/changes/archive/2026-11-06-add-entity-map-view/`
+- **Jejak:** US-002, FazryJavier/LenSoftwareDevTest#4
+- **Pengujian:** 9 dari 9 check lulus pada commit `72cbe44`. Performa pada 500 marker belum diperiksa.
+
 ### US-002: Menampilkan entitas pada peta
 
 - **Jenis:** Added

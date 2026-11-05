@@ -43,12 +43,21 @@ function readBounds({ target }: BoundsSource): MapBounds {
 interface EntityMapProps {
   styleUrl: string;
   entities: Entity[];
+  selectedId: string | null;
+  onSelect: (id: string, trigger: HTMLElement) => void;
   /** Called once the map is ready, and after every movement finishes. */
   onViewReady: (bounds: MapBounds) => void;
   onViewChange: (bounds: MapBounds) => void;
 }
 
-export function EntityMap({ styleUrl, entities, onViewReady, onViewChange }: EntityMapProps) {
+export function EntityMap({
+  styleUrl,
+  entities,
+  selectedId,
+  onSelect,
+  onViewReady,
+  onViewChange,
+}: EntityMapProps) {
   return (
     <Map
       initialViewState={INDONESIA_VIEW}
@@ -70,7 +79,12 @@ export function EntityMap({ styleUrl, entities, onViewReady, onViewChange }: Ent
       {/* Same corner as the attribution, so the two stack instead of overlapping on phones. */}
       <NavigationControl position="bottom-right" showCompass={false} />
       {entities.map((entity) => (
-        <EntityMarker key={entity.id} entity={entity} />
+        <EntityMarker
+          key={entity.id}
+          entity={entity}
+          selected={entity.id === selectedId}
+          onSelect={onSelect}
+        />
       ))}
     </Map>
   );

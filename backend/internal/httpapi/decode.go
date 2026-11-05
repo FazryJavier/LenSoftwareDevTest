@@ -2,14 +2,20 @@ package httpapi
 
 import (
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/FazryJavier/LenSoftwareDevTest/backend/internal/domain"
 )
 
+// uuidPattern rejects bad IDs here, because PostgreSQL would otherwise answer with an error
+// that looks like a server failure.
+var uuidPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
+
 const (
 	codeInvalidQuery = "invalid_query"
+	codeInvalidID    = "invalid_id"
 
 	defaultPage    = 1
 	maxPage        = 1_000_000 // Keeps the computed OFFSET far from overflowing.

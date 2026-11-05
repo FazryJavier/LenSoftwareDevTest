@@ -48,7 +48,7 @@ Satu user story dikerjakan dalam satu change OpenSpec dan satu branch.
 5. Jalankan pemeriksaan pada bagian [Perintah](#perintah), dan lakukan [tinjauan mandiri](#tinjauan-mandiri-sebelum-menyatakan-selesai).
 6. Jalankan `/opsx:verify`, lalu `/opsx:archive`.
 7. Perbarui `CHANGELOG.md`, status user story, `README.md`, dan `docs/AI_USAGE.md`.
-8. Buka Pull Request hanya bila pemilik proyek meminta.
+8. Commit, push, dan buka Pull Request bila pemilik proyek meminta, lalu aktifkan auto-merge. PR masuk sendiri setelah `CI success` lulus.
 
 Detailnya ada di [WORKFLOW](docs/WORKFLOW.md).
 
@@ -149,6 +149,7 @@ frontend/
 │   │   ├── EntitiesPage.tsx       # Menyusun halaman dan memegang state panel
 │   │   ├── api.ts                 # Fungsi endpoint entitas
 │   │   ├── bbox.ts                # Batas peta menjadi parameter API
+│   │   ├── format.ts              # Format tanggal dan koordinat
 │   │   ├── hooks.ts               # Hook TanStack Query dan query key
 │   │   ├── schema.ts              # Skema Zod dan tipe turunannya
 │   │   ├── constants.ts           # Label dan ikon per jenis dan status
@@ -319,7 +320,7 @@ Minta konfirmasi eksplisit sebelum melakukan hal berikut:
 
 - `docker compose down -v`, `DROP`, `TRUNCATE`, `DELETE` massal, atau reset migrasi.
 - `git push --force`, `git reset --hard`, atau penulisan ulang riwayat.
-- Push ke `main`, merge, atau perubahan pengaturan repository.
+- Push langsung ke `main`, atau perubahan pengaturan repository.
 - Mengirim email atau menyerahkan hasil tes.
 
 Perubahan skema selalu melalui migrasi baru. File migrasi yang sudah di-commit tidak boleh diubah.
@@ -328,7 +329,7 @@ Perubahan skema selalu melalui migrasi baru. File migrasi yang sudah di-commit t
 
 Format commit mengikuti General Rules. Nama branch: `feat/us-XXX-<slug>`, `fix/<slug>`, `docs/<slug>`, atau `chore/<slug>`. Scope commit memakai `backend`, `frontend`, `db`, `api`, `ci`, atau `docs`.
 
-Satu-satunya pengecualian larangan push ke `main` adalah commit awal repository, dan hanya atas instruksi pemilik proyek.
+`main` diproteksi: perubahan masuk lewat Pull Request dan wajib lulus `CI success`, tanpa wajib review. PR boleh di-merge tanpa approval pemilik proyek setelah CI lulus, karena pemilik proyek menetapkannya demikian pada 6 November 2026. PR dengan CI gagal atau konflik tidak di-merge, melainkan diperbaiki atau dilaporkan.
 
 ## Changelog
 

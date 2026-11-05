@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -63,6 +64,22 @@ func (s *EntityStore) List(ctx context.Context, filter domain.ListFilter) (domai
 	}
 
 	return domain.EntityPage{Entities: entities, Total: total}, nil
+}
+
+// Get returns one entity, or domain.ErrNotFound when it does not exist.
+func (s *EntityStore) Get(ctx context.Context, id string) (domain.Entity, error) {
+	rows, err := s.db.Query(ctx, "SELECT "+entityColumns+" FROM entities WHERE id = $1::uuid", id)
+	if err != nil {
+		return domain.Entity{}, fmt.Errorf("get entity: %w", err)
+	}
+	entity, err := pgx.CollectExactlyOneRow(rows, scanEntity)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return domain.Entity{}, domain.ErrNotFound
+	}
+	if err != nil {
+		return domain.Entity{}, fmt.Errorf("read entity: %w", err)
+	}
+	return entity, nil
 }
 
 func scanEntity(row pgx.CollectableRow) (domain.Entity, error) {

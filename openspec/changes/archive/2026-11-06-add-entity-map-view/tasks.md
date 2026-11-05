@@ -20,7 +20,7 @@
 - [x] 3.1 Buat `constants.ts`, `EntityMarker`, dan komponen `Banner`, dengan test ikon, warna, dan label aksesibilitas untuk setiap jenis dan status; verifikasi dengan `npm test`
 - [x] 3.2 Buat `EntityMap` dan `EntitiesPage` dengan keadaan memuat, kosong, gagal dengan coba lagi, dan peringatan batas, dengan test Vitest memakai peta yang di-mock; verifikasi dengan `npm test`
 - [x] 3.3 Ganti `BackendStatus` dengan `EntitiesPage`, dan hapus komponen serta test lamanya; verifikasi dengan `npm run lint` dan `npm run typecheck`
-- [ ] 3.4 Perbarui CSP di `nginx.conf` sesuai kebutuhan MapLibre; verifikasi lewat job `e2e` yang berjalan di belakang nginx tanpa pelanggaran CSP
+- [x] 3.4 Perbarui CSP di `nginx.conf` sesuai kebutuhan MapLibre; verifikasi lewat job `e2e` yang berjalan di belakang nginx tanpa pelanggaran CSP
 
 ## 4. Test end-to-end
 
@@ -37,7 +37,7 @@
 ## 6. Pemeriksaan akhir
 
 - [x] 6.1 Jalankan semua pemeriksaan pada bagian Perintah di `CLAUDE.md`, dan laporkan yang tidak dapat dijalankan
-- [ ] 6.2 Setelah pemilik proyek menyetujui push, buka Pull Request dan buktikan semua job CI lulus
+- [x] 6.2 Setelah pemilik proyek menyetujui push, buka Pull Request dan buktikan semua job CI lulus
 
 ## Workflow follow-up
 

@@ -14,8 +14,15 @@ import (
 
 type fakeEntityStore struct {
 	page       domain.EntityPage
+	entity     domain.Entity
 	err        error
 	lastFilter domain.ListFilter
+	lastID     string
+}
+
+func (f *fakeEntityStore) Get(_ context.Context, id string) (domain.Entity, error) {
+	f.lastID = id
+	return f.entity, f.err
 }
 
 func (f *fakeEntityStore) List(_ context.Context, filter domain.ListFilter) (domain.EntityPage, error) {
@@ -139,5 +146,101 @@ func TestListEntities_StoreFails_Returns500WithoutDetails(t *testing.T) {
 		if strings.Contains(rec.Body.String(), leak) {
 			t.Errorf("body leaks %q: %s", leak, rec.Body)
 		}
+	}
+}
+
+const existingID = "0b5f6c1e-3d1a-4c55-9d58-3f0a0a2c1e11"
+
+func TestGetEntity_Existing_ReturnsEntityWithNullMeta(t *testing.T) {
+	store := &fakeEntityStore{entity: domain.Entity{
+		ID: existingID, Name: "Truk", Type: "vehicle", Status: "active", Latitude: -6.9, Longitude: 107.6,
+	}}
+
+	rec := perform(t, NewRouter(entityDeps(store)), http.MethodGet, "/api/v1/entities/"+existingID, nil)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body)
+	}
+	body := decodeEnvelope(t, rec)
+	if body.Meta != nil || body.Errors != nil {
+		t.Errorf("meta = %v, errors = %v, want null", body.Meta, body.Errors)
+	}
+	data, ok := body.Data.(map[string]any)
+	if !ok {
+		t.Fatalf("data = %#v, want an object", body.Data)
+	}
+	if data["id"] != existingID || data["name"] != "Truk" || data["latitude"] != -6.9 {
+		t.Errorf("data = %+v", data)
+	}
+	if store.lastID != existingID {
+		t.Errorf("store received %q", store.lastID)
+	}
+}
+
+func TestGetEntity_UppercaseID_IsAccepted(t *testing.T) {
+	rec := perform(t, NewRouter(entityDeps(&fakeEntityStore{})), http.MethodGet,
+		"/api/v1/entities/"+strings.ToUpper(existingID), nil)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("status = %d, want 200", rec.Code)
+	}
+}
+
+func TestGetEntity_Missing_Returns404(t *testing.T) {
+	store := &fakeEntityStore{err: domain.ErrNotFound}
+
+	rec := perform(t, NewRouter(entityDeps(store)), http.MethodGet, "/api/v1/entities/"+existingID, nil)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("status = %d, want 404", rec.Code)
+	}
+	body := decodeEnvelope(t, rec)
+	assertSingleError(t, body, codeNotFound)
+	if body.Message != "Entity not found." {
+		t.Errorf("message = %q", body.Message)
+	}
+}
+
+func TestGetEntity_InvalidID_Returns400WithoutCallingStore(t *testing.T) {
+	tests := []string{
+		"not-a-uuid",
+		"123",
+		"0b5f6c1e-3d1a-4c55-9d58-3f0a0a2c1e1",
+		"0b5f6c1e-3d1a-4c55-9d58-3f0a0a2c1e111",
+		"0b5f6c1e3d1a4c559d583f0a0a2c1e11",
+		"gb5f6c1e-3d1a-4c55-9d58-3f0a0a2c1e11",
+	}
+	for _, id := range tests {
+		t.Run(id, func(t *testing.T) {
+			store := &fakeEntityStore{}
+
+			rec := perform(t, NewRouter(entityDeps(store)), http.MethodGet, "/api/v1/entities/"+id, nil)
+
+			if rec.Code != http.StatusBadRequest {
+				t.Fatalf("status = %d, want 400", rec.Code)
+			}
+			body := decodeEnvelope(t, rec)
+			assertSingleError(t, body, codeInvalidID)
+			if body.Errors[0].Field == nil || *body.Errors[0].Field != "id" {
+				t.Errorf("field = %v", body.Errors[0].Field)
+			}
+			if store.lastID != "" {
+				t.Errorf("store was called with %q", store.lastID)
+			}
+		})
+	}
+}
+
+func TestGetEntity_StoreFails_Returns500WithoutDetails(t *testing.T) {
+	store := &fakeEntityStore{err: errors.New("ERROR: connection refused (SQLSTATE 08006)")}
+
+	rec := perform(t, NewRouter(entityDeps(store)), http.MethodGet, "/api/v1/entities/"+existingID, nil)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d", rec.Code)
+	}
+	assertSingleError(t, decodeEnvelope(t, rec), codeInternalError)
+	if strings.Contains(rec.Body.String(), "SQLSTATE") {
+		t.Errorf("body leaks details: %s", rec.Body)
 	}
 }

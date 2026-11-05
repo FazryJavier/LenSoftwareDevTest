@@ -16,6 +16,16 @@ export interface EntityList {
   total: number;
 }
 
+export async function getEntity(id: string, signal?: AbortSignal): Promise<Entity> {
+  const response = await apiRequest(`/entities/${encodeURIComponent(id)}`, { signal });
+
+  const parsed = entitySchema.safeParse(response.data);
+  if (!parsed.success) {
+    throw new ApiError(200, 'Server mengirim data entitas yang tidak dikenali.', []);
+  }
+  return parsed.data;
+}
+
 export async function listEntities(bbox: string, signal?: AbortSignal): Promise<EntityList> {
   const query = new URLSearchParams({ bbox, per_page: String(ENTITIES_PER_VIEW) });
   const response = await apiRequest(`/entities?${query.toString()}`, { signal });

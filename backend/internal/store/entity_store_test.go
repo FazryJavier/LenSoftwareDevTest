@@ -2,6 +2,8 @@ package store
 
 import (
 	"context"
+	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -228,4 +230,50 @@ func TestList_LargeBoundingBox_ExcludesPointsOutsideTheRectangle(t *testing.T) {
 		t.Fatalf("List() error = %v", err)
 	}
 	assertNames(t, page, "dalam")
+}
+
+func TestGet_ExistingEntity_ReturnsAllFieldsWithoutSwappingCoordinates(t *testing.T) {
+	ctx, tx, store := newStoreInTx(t)
+	description := "Armada Bandung"
+	insertEntity(ctx, t, tx, seedEntity{
+		id: idA, name: "Truk", description: &description, attributes: `{"plate_number":"D 1234 ABC"}`,
+		longitude: 107.6191, latitude: -6.9175, createdAt: baseTime,
+	})
+	insertEntity(ctx, t, tx, seedEntity{id: idB, name: "Lain", createdAt: baseTime})
+
+	got, err := store.Get(ctx, idA)
+	if err != nil {
+		t.Fatalf("Get() error = %v", err)
+	}
+	if got.ID != idA || got.Name != "Truk" {
+		t.Errorf("entity = %+v", got)
+	}
+	if got.Latitude != -6.9175 || got.Longitude != 107.6191 {
+		t.Errorf("latitude = %v, longitude = %v", got.Latitude, got.Longitude)
+	}
+	if got.Description == nil || *got.Description != description || got.Attributes["plate_number"] != "D 1234 ABC" {
+		t.Errorf("description = %v, attributes = %v", got.Description, got.Attributes)
+	}
+}
+
+func TestGet_UppercaseID_FindsEntity(t *testing.T) {
+	ctx, tx, store := newStoreInTx(t)
+	insertEntity(ctx, t, tx, seedEntity{id: idA, name: "Truk", createdAt: baseTime})
+
+	got, err := store.Get(ctx, strings.ToUpper(idA))
+	if err != nil {
+		t.Fatalf("Get() error = %v", err)
+	}
+	if got.ID != idA {
+		t.Errorf("ID = %q, want the stored form %q", got.ID, idA)
+	}
+}
+
+func TestGet_MissingEntity_ReturnsNotFound(t *testing.T) {
+	ctx, _, store := newStoreInTx(t)
+
+	_, err := store.Get(ctx, idA)
+	if !errors.Is(err, domain.ErrNotFound) {
+		t.Errorf("error = %v, want domain.ErrNotFound", err)
+	}
 }

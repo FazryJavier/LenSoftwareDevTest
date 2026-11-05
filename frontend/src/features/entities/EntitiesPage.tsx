@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Banner } from '../../components/ui/Banner';
 import { toBbox, type MapBounds } from './bbox';
+import { EntityDetailPanel } from './components/EntityDetailPanel';
 import { useEntities } from './hooks';
 import { EntityMap } from './map/EntityMap';
 
@@ -31,9 +32,43 @@ function useMapArea() {
   };
 }
 
+function useEntitySelection() {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const trigger = useRef<HTMLElement | null>(null);
+
+  const select = useCallback((id: string, element: HTMLElement) => {
+    trigger.current = element;
+    setSelectedId(id);
+  }, []);
+
+  const close = useCallback(() => {
+    setSelectedId(null);
+    trigger.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (selectedId === null) {
+      return;
+    }
+    // On the document, because focus may be on the map or a marker rather than the panel.
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        close();
+      }
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [selectedId, close]);
+
+  return { selectedId, select, close };
+}
+
 export function EntitiesPage({ mapStyleUrl }: { mapStyleUrl: string }) {
   const area = useMapArea();
   const entities = useEntities(area.bbox);
+  const selection = useEntitySelection();
 
   const loaded = entities.data?.entities ?? [];
   const hasMoreThanLoaded = entities.data !== undefined && entities.data.total > loaded.length;
@@ -48,6 +83,8 @@ export function EntitiesPage({ mapStyleUrl }: { mapStyleUrl: string }) {
         <EntityMap
           styleUrl={mapStyleUrl}
           entities={loaded}
+          selectedId={selection.selectedId}
+          onSelect={selection.select}
           onViewReady={area.setNow}
           onViewChange={area.setDebounced}
         />
@@ -76,6 +113,14 @@ export function EntitiesPage({ mapStyleUrl }: { mapStyleUrl: string }) {
           )}
           {isEmpty && <Banner tone="info">Belum ada entitas di area ini.</Banner>}
         </div>
+        {selection.selectedId !== null && (
+          // The key restarts the panel, so one entity's data never shows under another's.
+          <EntityDetailPanel
+            key={selection.selectedId}
+            entityId={selection.selectedId}
+            onClose={selection.close}
+          />
+        )}
       </main>
     </div>
   );
