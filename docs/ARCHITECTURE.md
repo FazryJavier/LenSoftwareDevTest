@@ -42,7 +42,6 @@ Pada pengembangan lokal, Vite dev server meneruskan `/api/` ke `localhost:8080`.
 ├── frontend/
 │   ├── src/
 │   │   ├── api/           # Klien HTTP dan tipe envelope
-│   │   ├── features/system/  # Status koneksi backend
 │   │   ├── features/entities/
 │   │   │   ├── components/   # Form, panel detail, filter
 │   │   │   ├── map/          # Peta dan marker

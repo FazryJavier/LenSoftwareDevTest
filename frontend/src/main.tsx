@@ -5,8 +5,7 @@ import { App } from './App';
 import './index.css';
 import { readEnv } from './lib/env';
 
-// Fail at startup rather than later, when the map first needs its style URL.
-readEnv(import.meta.env);
+const env = readEnv(import.meta.env);
 
 const root = document.getElementById('root');
 if (root === null) {
@@ -16,7 +15,7 @@ if (root === null) {
 createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={new QueryClient()}>
-      <App />
+      <App mapStyleUrl={env.VITE_MAP_STYLE_URL} />
     </QueryClientProvider>
   </StrictMode>,
 );

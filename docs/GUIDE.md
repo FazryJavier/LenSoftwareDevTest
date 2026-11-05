@@ -1,12 +1,12 @@
 # Guide
 
-> **Status:** baru fondasi aplikasi yang tersedia. Bagian 2 dan 3 menggambarkan perilaku yang direncanakan dan harus diperiksa kembali setelah fitur selesai. Status terbaru ada di [README](../README.md#status).
+> **Status:** baru bagian "Melihat entitas" yang tersedia. Bagian lain pada §2 dan §3 menggambarkan perilaku yang direncanakan dan harus diperiksa kembali setelah fitur selesai. Status terbaru ada di [README](../README.md#status).
 
 ## 1. Menjalankan aplikasi
 
 ### Dengan Docker
 
-> Jalur ini belum dibuktikan di mesin pengembangan karena Docker Desktop gagal berjalan di sana. Pembuktiannya dilakukan oleh job `e2e` di CI.
+> Jalur ini terbukti oleh job `e2e` di CI pada Linux. Jalur ini belum dicoba di mesin pengembangan Windows, karena Docker Desktop gagal berjalan di sana.
 
 Prasyarat: Docker dengan Docker Compose, serta koneksi internet untuk memuat tile peta.
 
@@ -88,7 +88,7 @@ $env:VITE_MAP_STYLE_URL="https://tiles.openfreemap.org/styles/liberty"
 npm run dev
 ```
 
-Buka http://localhost:5173. Halaman menampilkan **Backend terhubung** bila semuanya berjalan.
+Buka http://localhost:5173. Peta Indonesia tampil bila semuanya berjalan. Bila backend memakai port selain 8080, setel `$env:API_PROXY_TARGET` sebelum `npm run dev`, misalnya `http://localhost:8082`.
 
 Data contoh diisi dengan perintah berikut. Password role `geo` adalah `geo_local_only`:
 
@@ -112,7 +112,7 @@ cd backend; go test ./...
 
 ### Melihat entitas
 
-Buka aplikasi, lalu geser atau perbesar peta. Ikon marker menunjukkan jenis, dan warnanya menunjukkan status. Bila muncul peringatan terlalu banyak data, perbesar peta untuk mempersempit area.
+Buka aplikasi, lalu geser atau perbesar peta. Peta awal memuat seluruh Indonesia. Ikon marker menunjukkan jenis, dan warnanya menunjukkan status. Marker yang berdekatan dapat bertumpuk, sehingga perbesar peta untuk memisahkannya. Bila muncul peringatan terlalu banyak data, perbesar peta untuk mempersempit area.
 
 ### Melihat detail
 

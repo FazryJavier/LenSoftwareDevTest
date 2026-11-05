@@ -11,7 +11,7 @@ erDiagram
         text status "NOT NULL, CHECK enum"
         varchar_500 description "NULL"
         jsonb attributes "NOT NULL, default {}"
-        geography_point location "NOT NULL, SRID 4326, indeks GiST"
+        geography_point location "NOT NULL, SRID 4326, indeks GiST pada geometry"
         timestamptz created_at "NOT NULL, default now()"
         timestamptz updated_at "NOT NULL, default now()"
     }

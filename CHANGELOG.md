@@ -4,6 +4,24 @@ Semua perubahan pada proyek ini dicatat di sini, dengan entri terbaru di atas, a
 
 ## 2026-11-06
 
+### US-002: Menampilkan entitas pada peta
+
+- **Jenis:** Added
+- **Apa:** Halaman awal kini berupa peta yang menampilkan entitas pada area yang terlihat. Marker memakai ikon untuk jenis dan warna untuk status. Tersedia keadaan kosong, gagal dengan tombol coba lagi, dan peringatan bila data melebihi 500. API `GET /api/v1/entities` mendukung `bbox`, `page`, dan `per_page`.
+- **Bagaimana:** Data dimuat ulang setelah peta selesai bergerak, dengan debounce 300 ms, dan marker lama tetap tampil selama data baru dimuat. Filter area memakai `ST_Intersects` pada geometry, disertai migrasi `00002` yang mengganti indeks spasial. CSP nginx diperbarui untuk peta, dan worker MapLibre dibundel secara eksplisit agar ikut ke build produksi. Halaman status backend dihapus. Test integrasi kini gagal, bukan dilewati, bila berjalan di CI tanpa database, dan Dependabot mengabaikan kenaikan mayor TypeScript.
+- **File utama:** `backend/internal/domain/`, `backend/internal/store/entity_store.go`, `backend/internal/httpapi/entity_handler.go`, `backend/migrations/00002_use_geometry_location_index.sql`, `frontend/src/features/entities/`, `frontend/nginx.conf`, `frontend/vite.config.ts`
+- **Jejak:** US-002, FR-2, OpenSpec `add-entity-map-view`, branch `feat/us-002-map-view`
+- **Pengujian:** Test Go termasuk integrasi pada PostgreSQL 18 dengan PostGIS 3.6, 41 test Vitest, dan 8 test Playwright terhadap build produksi lulus. Diperiksa dengan data dan tile asli di Chromium: 6 marker contoh tampil tanpa error console saat dimuat pada ukuran desktop dan ponsel. Percobaan CI pertama gagal karena worker tidak ikut ke build produksi, dan sudah diperbaiki. **Belum terbukti:** CSP nginx dan PostgreSQL 17 dengan PostGIS 3.7 menunggu CI, dan performa pada 500 marker belum diperiksa.
+
+### US-001: Bukti CI pada Pull Request pertama
+
+- **Jenis:** Changed
+- **Apa:** Jalur Docker Compose kini terbukti di CI: image berhasil dibangun, ketiga layanan mencapai status sehat, dan 2 test Playwright lulus melalui nginx.
+- **Bagaimana:** PR #1 menjalankan seluruh workflow untuk pertama kalinya dengan PostgreSQL 17 dan PostGIS 3.7. Status dokumen diselaraskan dengan hasil ini.
+- **File utama:** `README.md`, `docs/GUIDE.md`, `docs/ITA.md`, `docs/user_stories/US-001.md`, `openspec/changes/add-project-foundation/tasks.md`
+- **Jejak:** US-001, FazryJavier/LenSoftwareDevTest#1
+- **Pengujian:** 9 dari 9 check PR lulus, termasuk `go test -race`, gitleaks, dan `End-to-end`. **Belum terbukti:** `docker compose stop db`, data bertahan setelah `docker compose down`, volume baru pada project terpisah, pengguna non-root di dalam container, dan graceful shutdown, karena Docker Desktop masih gagal berjalan di mesin pengembangan.
+
 ### US-001: Fondasi aplikasi
 
 - **Jenis:** Added
