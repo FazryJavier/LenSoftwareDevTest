@@ -4,6 +4,24 @@ Semua perubahan pada proyek ini dicatat di sini, dengan entri terbaru di atas, a
 
 ## 2026-11-06
 
+### US-004: Menambah entitas
+
+- **Jenis:** Added
+- **Apa:** Tombol Tambah membuka form. Lokasi dipilih dengan klik peta atau diketik, dengan marker sementara. Setelah disimpan, marker baru tampil dan panel membuka detailnya. API `POST /api/v1/entities` memvalidasi semua aturan PRD §5 dan melaporkan semua pelanggaran sekaligus.
+- **Bagaimana:** Backend membaca input tanpa tipe, lalu `domain` memvalidasi dan menormalkannya. Decoder menolak `Content-Type` salah (415), body di atas 64 KiB (413), JSON rusak dan field tidak dikenal (400). Frontend memvalidasi lewat skema Zod dan menampilkan error 422 dari server pada field terkait. Peta dimuat ulang setelah simpan, sehingga hanya data tersimpan yang tampil. Pembatalan form yang berisi perubahan meminta konfirmasi.
+- **File utama:** `backend/internal/domain/validate.go`, `backend/internal/httpapi/decode_body.go`, `backend/internal/store/entity_store.go`, `frontend/src/features/entities/components/EntityForm.tsx`, `frontend/src/features/entities/formSchema.ts`, `frontend/src/features/entities/usePanel.ts`, `frontend/src/components/ui/`
+- **Jejak:** US-004, FR-4, FR-7, OpenSpec `add-entity-create`, branch `feat/us-004-entity-create`
+- **Pengujian:** Test Go termasuk integrasi pada PostgreSQL 18 dengan PostGIS 3.6, 134 test Vitest, dan 21 test Playwright terhadap build produksi lulus, termasuk alur tambah dengan API sungguhan dan data yang bertahan setelah muat ulang. Form diperiksa pada ukuran desktop dan ponsel di Edge. **Belum terbukti:** nginx dan PostgreSQL 17 dengan PostGIS 3.7 menunggu CI. Pengujian silang seluruh aturan validasi dan koleksi Postman menyusul pada US-007.
+
+### US-003: Selesai
+
+- **Jenis:** Changed
+- **Apa:** US-003 selesai, dan change OpenSpec-nya diarsipkan.
+- **Bagaimana:** CI pada PR #5 lulus, lalu PR masuk lewat auto-merge.
+- **File utama:** `openspec/specs/entity-detail/spec.md`, `openspec/changes/archive/2026-11-06-add-entity-detail/`
+- **Jejak:** US-003, FazryJavier/LenSoftwareDevTest#5
+- **Pengujian:** Semua check CI pada PR #5 lulus.
+
 ### US-003: Melihat detail entitas
 
 - **Jenis:** Added

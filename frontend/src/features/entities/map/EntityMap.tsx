@@ -1,8 +1,9 @@
-import { Map, NavigationControl } from '@vis.gl/react-maplibre';
+import { Map, Marker, NavigationControl } from '@vis.gl/react-maplibre';
 import { setWorkerUrl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import type { MapBounds } from '../bbox';
+import type { MapPoint } from '../formSchema';
 import type { Entity } from '../schema';
 import { EntityMarker } from './EntityMarker';
 
@@ -45,6 +46,9 @@ interface EntityMapProps {
   entities: Entity[];
   selectedId: string | null;
   onSelect: (id: string, trigger: HTMLElement) => void;
+  draftLocation: MapPoint | null;
+  /** When set, clicking the map picks a location and the cursor shows it. */
+  onMapPick: ((point: MapPoint) => void) | null;
   /** Called once the map is ready, and after every movement finishes. */
   onViewReady: (bounds: MapBounds) => void;
   onViewChange: (bounds: MapBounds) => void;
@@ -55,6 +59,8 @@ export function EntityMap({
   entities,
   selectedId,
   onSelect,
+  draftLocation,
+  onMapPick,
   onViewReady,
   onViewChange,
 }: EntityMapProps) {
@@ -65,6 +71,10 @@ export function EntityMap({
       renderWorldCopies={false}
       attributionControl={{ compact: true }}
       style={{ width: '100%', height: '100%' }}
+      {...(onMapPick === null ? {} : { cursor: 'crosshair' })}
+      onClick={(event) => {
+        onMapPick?.({ latitude: event.lngLat.lat, longitude: event.lngLat.lng });
+      }}
       onLoad={(event) => {
         onViewReady(readBounds(event));
       }}
@@ -86,6 +96,19 @@ export function EntityMap({
           onSelect={onSelect}
         />
       ))}
+      {draftLocation !== null && (
+        <Marker
+          longitude={draftLocation.longitude}
+          latitude={draftLocation.latitude}
+          anchor="center"
+          style={{ pointerEvents: 'none', zIndex: 2 }}
+        >
+          <span
+            data-testid="draft-marker"
+            className="block size-8 rounded-full border-2 border-dashed border-primary bg-surface shadow-md"
+          />
+        </Marker>
+      )}
     </Map>
   );
 }

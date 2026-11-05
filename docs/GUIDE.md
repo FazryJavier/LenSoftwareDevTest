@@ -1,6 +1,6 @@
 # Guide
 
-> **Status:** baru bagian "Melihat entitas" dan "Melihat detail" yang tersedia. Bagian lain pada §2 dan §3 menggambarkan perilaku yang direncanakan dan harus diperiksa kembali setelah fitur selesai. Status terbaru ada di [README](../README.md#status).
+> **Status:** baru bagian "Melihat entitas", "Melihat detail", dan "Menambah entitas" yang tersedia. Bagian lain pada §2 dan §3 menggambarkan perilaku yang direncanakan dan harus diperiksa kembali setelah fitur selesai. Status terbaru ada di [README](../README.md#status).
 
 ## 1. Menjalankan aplikasi
 
@@ -124,6 +124,8 @@ Pilih marker. Panel menampilkan informasi lengkap di sisi kanan, atau di bagian 
 2. Klik lokasi pada peta, atau ketik latitude dan longitude.
 3. Isi nama, jenis, dan status. Deskripsi dan atribut bersifat opsional.
 4. Pilih **Simpan**.
+
+Bila data tidak valid, pesan tampil pada field terkait dan isi form tidak hilang. Saat membatalkan form yang sudah terisi, atau menekan `Esc`, aplikasi meminta konfirmasi lebih dulu.
 
 ### Mengubah entitas
 

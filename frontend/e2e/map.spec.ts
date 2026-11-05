@@ -220,6 +220,185 @@ test.describe('entity details', () => {
   });
 });
 
+test.describe('adding an entity', () => {
+  async function openFormOnMap(page: Page) {
+    await stubBaseMap(page);
+    await page.goto('/');
+    await page.locator('.maplibregl-canvas').waitFor();
+    await page.getByRole('button', { name: 'Tambah', exact: true }).click();
+    await expect(page.getByRole('complementary', { name: 'Tambah entitas' })).toBeVisible();
+  }
+
+  async function clickMapCentre(page: Page) {
+    const box = await page.locator('.maplibregl-canvas').boundingBox();
+    if (box === null) {
+      throw new Error('The map canvas is not visible.');
+    }
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  }
+
+  test('saves through the real API and is still there after a reload', async ({ page }) => {
+    const name = `E2E Tambah ${String(Date.now())}`;
+    await openFormOnMap(page);
+
+    await clickMapCentre(page);
+
+    await expect(page.getByLabel(/Latitude/)).not.toHaveValue('');
+    await expect(page.getByLabel(/Longitude/)).not.toHaveValue('');
+    await expect(page.getByTestId('draft-marker')).toBeVisible();
+
+    await page.getByLabel(/Nama/).fill(name);
+    await page.getByLabel(/Jenis/).selectOption('iot_device');
+    await page.getByLabel(/Status/).selectOption('active');
+    await page.getByRole('button', { name: 'Simpan' }).click();
+
+    await expect(page.getByRole('heading', { name })).toBeVisible();
+    await expect(page.getByText('Entitas berhasil ditambahkan.')).toBeVisible();
+    await expect(page.getByTestId('draft-marker')).toBeHidden();
+    const marker = page.getByRole('button', { name: `${name}, Perangkat IoT, Aktif` });
+    await expect(marker).toBeVisible();
+
+    await page.reload();
+
+    await expect(marker).toBeVisible();
+  });
+
+  test('moves the draft marker to typed coordinates', async ({ page }) => {
+    await openFormOnMap(page);
+
+    await page.getByLabel(/Latitude/).fill('-2');
+    await page.getByLabel(/Longitude/).fill('118');
+
+    await expect(page.getByTestId('draft-marker')).toBeVisible();
+  });
+
+  test('shows validation messages without sending a request', async ({ page }) => {
+    let posted = false;
+    page.on('request', (request) => {
+      posted ||= request.method() === 'POST';
+    });
+    await openFormOnMap(page);
+
+    await page.getByRole('button', { name: 'Simpan' }).click();
+    await page.getByLabel(/Latitude/).fill('91');
+
+    await expect(page.getByText('Nama wajib diisi.')).toBeVisible();
+    await expect(page.getByText('Latitude harus antara -90 dan 90.')).toBeVisible();
+    expect(posted).toBe(false);
+  });
+
+  test('shows a server rejection on the field and keeps the form', async ({ page }) => {
+    await page.route(/\/api\/v1\/entities$/, (route) =>
+      route.fulfill({
+        status: 422,
+        json: {
+          code: 422,
+          success: false,
+          message: 'Validation failed.',
+          data: null,
+          errors: [{ field: 'name', code: 'too_long', message: 'Too long.' }],
+          meta: null,
+        },
+      }),
+    );
+    await openFormOnMap(page);
+    await page.getByLabel(/Nama/).fill('Nama');
+    await page.getByLabel(/Jenis/).selectOption('other');
+    await page.getByLabel(/Status/).selectOption('active');
+    await page.getByLabel(/Latitude/).fill('0');
+    await page.getByLabel(/Longitude/).fill('0');
+
+    await page.getByRole('button', { name: 'Simpan' }).click();
+
+    await expect(page.getByText('Isinya terlalu panjang.')).toBeVisible();
+    await expect(page.getByLabel(/Nama/)).toHaveValue('Nama');
+  });
+
+  test('asks before discarding changes, including from the Escape key', async ({ page }) => {
+    await openFormOnMap(page);
+    const form = page.getByRole('complementary', { name: 'Tambah entitas' });
+    await page.getByLabel(/Nama/).fill('Sementara');
+
+    await page.keyboard.press('Escape');
+    const dialog = page.getByRole('dialog', { name: 'Buang perubahan?' });
+    await expect(dialog).toBeVisible();
+
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    await expect(page.getByLabel(/Nama/)).toHaveValue('Sementara');
+
+    await page.getByRole('button', { name: 'Batal' }).click();
+    await page.getByRole('button', { name: 'Buang' }).click();
+
+    await expect(form).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Tambah', exact: true })).toBeFocused();
+  });
+
+  test('keeps the form open when a marker is clicked', async ({ page }) => {
+    await page.route(/\/api\/v1\/entities\?/, (route) => fulfillList(route, [ENTITY]));
+    await openFormOnMap(page);
+
+    await page.getByRole('button', { name: /Truk Logistik/ }).click();
+
+    await expect(page.getByRole('complementary', { name: 'Tambah entitas' })).toBeVisible();
+    await expect(page.getByRole('complementary', { name: 'Detail entitas' })).toBeHidden();
+  });
+});
+
+test.describe('creating through the real API', () => {
+  const VALID = { name: 'E2E API', type: 'other', status: 'active', latitude: 0, longitude: 0 };
+
+  test('answers 201 with a Location that returns the same entity', async ({ request }) => {
+    const created = await request.post('/api/v1/entities', { data: VALID });
+
+    expect(created.status()).toBe(201);
+    const location = created.headers().location ?? '';
+    expect(location).toMatch(/^\/api\/v1\/entities\/[0-9a-f-]{36}$/);
+
+    const fetched = await request.get(location);
+    expect(fetched.status()).toBe(200);
+    expect(await fetched.json()).toMatchObject({
+      data: { name: 'E2E API', latitude: 0, longitude: 0, description: null, attributes: {} },
+    });
+  });
+
+  test('answers 422 with every violation', async ({ request }) => {
+    const response = await request.post('/api/v1/entities', {
+      data: { name: '', type: 'spaceship', latitude: 91 },
+    });
+
+    expect(response.status()).toBe(422);
+    expect(await response.json()).toMatchObject({
+      success: false,
+      errors: expect.arrayContaining([
+        expect.objectContaining({ field: 'name', code: 'required' }),
+        expect.objectContaining({ field: 'type', code: 'invalid_enum' }),
+        expect.objectContaining({ field: 'status', code: 'required' }),
+        expect.objectContaining({ field: 'latitude', code: 'out_of_range' }),
+        expect.objectContaining({ field: 'longitude', code: 'required' }),
+      ]),
+    });
+  });
+
+  test('answers 400 for an unknown field and 415 for the wrong content type', async ({
+    request,
+  }) => {
+    const unknownField = await request.post('/api/v1/entities', {
+      data: { ...VALID, owner: 'me' },
+    });
+    expect(unknownField.status()).toBe(400);
+    expect(await unknownField.json()).toMatchObject({
+      errors: [{ field: 'owner', code: 'unknown_field' }],
+    });
+
+    const wrongType = await request.post('/api/v1/entities', {
+      headers: { 'Content-Type': 'text/plain' },
+      data: JSON.stringify(VALID),
+    });
+    expect(wrongType.status()).toBe(415);
+  });
+});
+
 test('the real API rejects an invalid entity ID through the proxy', async ({ request }) => {
   const response = await request.get('/api/v1/entities/not-a-uuid');
 

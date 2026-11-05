@@ -97,7 +97,8 @@ backend/
 │   │   ├── router.go          # Daftar rute dan EntityStore interface
 │   │   ├── middleware.go      # Recover, request ID, log, security headers, CORS
 │   │   ├── envelope.go        # writeSuccess, writeError
-│   │   ├── decode.go          # Decode JSON, batas body, parsing query
+│   │   ├── decode.go          # Parsing query dan ID
+│   │   ├── decode_body.go     # Decode JSON dan batas body
 │   │   ├── dto.go             # Bentuk request dan response JSON
 │   │   ├── entity_handler.go  # Handler CRUD
 │   │   └── health_handler.go  # Handler health
@@ -125,7 +126,7 @@ backend/
 - `pgx.ErrNoRows` diubah menjadi `domain.ErrNotFound` di `store`.
 - Bungkus error dengan `fmt.Errorf("get entity: %w", err)`. Periksa dengan `errors.Is` atau `errors.As`.
 - Error di-log sekali, yaitu di lapisan HTTP, bersama request ID.
-- Koordinat input memakai `*float64`, karena `0` adalah nilai yang sah.
+- Input dibaca sebagai nilai tanpa tipe, lalu `domain` memvalidasi tipe dan aturannya sekaligus, sehingga `0` tetap sah dan semua pelanggaran dilaporkan bersama.
 - Koordinat ditulis `ST_MakePoint(longitude, latitude)`. Urutan ini wajib dicakup test integrasi.
 - Tanpa `init()`, variabel global yang bisa berubah, dan `panic` di luar `main`.
 - Tanpa framework HTTP, ORM, atau library validasi. Lihat [ADR-003](docs/adr/ADR-003-stdlib-http-pgx.md).
@@ -150,10 +151,15 @@ frontend/
 │   │   ├── api.ts                 # Fungsi endpoint entitas
 │   │   ├── bbox.ts                # Batas peta menjadi parameter API
 │   │   ├── format.ts              # Format tanggal dan koordinat
+│   │   ├── formSchema.ts          # Skema form Zod dan payload API
+│   │   ├── formErrors.ts          # Error API menjadi pesan form
+│   │   ├── usePanel.ts            # Mode panel dan pengembalian fokus
 │   │   ├── hooks.ts               # Hook TanStack Query dan query key
 │   │   ├── schema.ts              # Skema Zod dan tipe turunannya
 │   │   ├── constants.ts           # Label dan ikon per jenis dan status
 │   │   ├── components/
+│   │   │   ├── Panel.tsx          # Bingkai panel di atas peta
+│   │   │   ├── AttributeFields.tsx
 │   │   │   ├── EntityForm.tsx     # Dipakai untuk tambah dan ubah
 │   │   │   ├── EntityDetailPanel.tsx
 │   │   │   ├── EntityFilters.tsx

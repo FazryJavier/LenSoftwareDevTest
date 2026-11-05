@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { apiRequest } from '../../api/client';
 import { ApiError } from '../../api/errors';
+import type { EntityPayload } from './formSchema';
 import { entitySchema, paginationMetaSchema, type Entity } from './schema';
 
 /** The API's maximum page size. The map asks users to zoom in beyond this many entities. */
@@ -14,6 +15,20 @@ const entityListSchema = z.object({
 export interface EntityList {
   entities: Entity[];
   total: number;
+}
+
+export async function createEntity(payload: EntityPayload): Promise<Entity> {
+  const response = await apiRequest('/entities', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const parsed = entitySchema.safeParse(response.data);
+  if (!parsed.success) {
+    throw new ApiError(201, 'Server mengirim data entitas yang tidak dikenali.', []);
+  }
+  return parsed.data;
 }
 
 export async function getEntity(id: string, signal?: AbortSignal): Promise<Entity> {

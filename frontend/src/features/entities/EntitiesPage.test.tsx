@@ -22,7 +22,9 @@ interface FakeMapProps {
   onLoad: (event: FakeEvent) => void;
   onError: (event: FakeEvent) => void;
   onMoveEnd: (event: FakeEvent) => void;
+  onClick: (event: { lngLat: { lat: number; lng: number } }) => void;
   mapStyle: string;
+  cursor?: string;
 }
 
 const fakeMap = vi.hoisted((): { props?: FakeMapProps } => ({}));
@@ -102,7 +104,7 @@ function failureResponse() {
   );
 }
 
-const fetchStub = vi.fn<(url: string) => Promise<Response>>();
+const fetchStub = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>();
 
 function requestedBbox(call: number): string | null {
   const url = fetchStub.mock.calls[call]?.[0];
@@ -272,6 +274,122 @@ describe('EntitiesPage', () => {
 
     expect(await screen.findByRole('button', { name: /Truk Logistik/ })).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  describe('adding an entity', () => {
+    const CREATED = entity({ id: '0b5f6c1e-3d1a-4c55-9d58-3f0a0a2c1e99', name: 'Baru' });
+
+    function success(data: Entity, code = 200) {
+      return new Response(
+        JSON.stringify({ code, success: true, message: 'OK.', data, errors: null, meta: null }),
+        { status: code },
+      );
+    }
+
+    const listCalls = () => fetchStub.mock.calls.filter(([url]) => url.includes('/entities?'));
+
+    async function openForm() {
+      renderLoadedPage();
+      await userEvent.click(screen.getByRole('button', { name: 'Tambah' }));
+    }
+
+    it('offers to add an entity when the area is empty', async () => {
+      fetchStub.mockResolvedValue(listResponse([]));
+      renderLoadedPage();
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Tambah entitas' }));
+
+      expect(screen.getByRole('complementary', { name: 'Tambah entitas' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Tambah entitas' })).not.toBeInTheDocument();
+    });
+
+    it('fills the form and shows a draft marker when the map is clicked', async () => {
+      fetchStub.mockResolvedValue(listResponse([]));
+      await openForm();
+      expect(screen.queryByTestId('draft-marker')).not.toBeInTheDocument();
+      expect(mapProps().cursor).toBe('crosshair');
+
+      act(() => {
+        mapProps().onClick({ lngLat: { lat: -6.5, lng: 107.5 } });
+      });
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/Latitude/)).toHaveValue('-6.500000');
+      });
+      expect(screen.getByLabelText(/Longitude/)).toHaveValue('107.500000');
+      expect(await screen.findByTestId('draft-marker')).toBeInTheDocument();
+    });
+
+    it('ignores map clicks when the form is closed', async () => {
+      fetchStub.mockResolvedValue(listResponse([]));
+      renderLoadedPage();
+
+      act(() => {
+        mapProps().onClick({ lngLat: { lat: -6.5, lng: 107.5 } });
+      });
+
+      await screen.findByText('Belum ada entitas di area ini.');
+      expect(screen.queryByTestId('draft-marker')).not.toBeInTheDocument();
+      expect(mapProps().cursor).toBeUndefined();
+    });
+
+    it('does not open details from a marker while the form is open', async () => {
+      fetchStub.mockResolvedValue(listResponse([entity({})]));
+      await openForm();
+
+      await userEvent.click(await screen.findByRole('button', { name: /Truk Logistik/ }));
+
+      expect(screen.getByRole('complementary', { name: 'Tambah entitas' })).toBeInTheDocument();
+      expect(
+        screen.queryByRole('complementary', { name: 'Detail entitas' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('saves, reloads the map, shows the new details, and announces success', async () => {
+      fetchStub.mockImplementation((url, init) =>
+        Promise.resolve(
+          init?.method === 'POST'
+            ? success(CREATED, 201)
+            : url.includes('/entities?')
+              ? listResponse(listCalls().length > 1 ? [CREATED] : [])
+              : success(CREATED),
+        ),
+      );
+      await openForm();
+      await userEvent.type(screen.getByLabelText(/Nama/), 'Baru');
+      await userEvent.selectOptions(screen.getByLabelText(/Jenis/), 'vehicle');
+      await userEvent.selectOptions(screen.getByLabelText(/Status/), 'active');
+      await userEvent.type(screen.getByLabelText(/Latitude/), '-6.9');
+      await userEvent.type(screen.getByLabelText(/Longitude/), '107.6');
+
+      await userEvent.click(screen.getByRole('button', { name: 'Simpan' }));
+
+      expect(await screen.findByRole('heading', { name: 'Baru' })).toBeInTheDocument();
+      expect(screen.getByRole('status')).toHaveTextContent('berhasil ditambahkan');
+      expect(await screen.findByRole('button', { name: /Baru, Kendaraan/ })).toBeInTheDocument();
+      expect(
+        screen.queryByRole('complementary', { name: 'Tambah entitas' }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByTestId('draft-marker')).not.toBeInTheDocument();
+    });
+
+    it('removes the form and the draft marker when cancelled, returning focus', async () => {
+      fetchStub.mockResolvedValue(listResponse([]));
+      await openForm();
+      act(() => {
+        mapProps().onClick({ lngLat: { lat: -6.5, lng: 107.5 } });
+      });
+      await screen.findByTestId('draft-marker');
+
+      await userEvent.click(screen.getByRole('button', { name: 'Batal' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Buang' }));
+
+      expect(
+        screen.queryByRole('complementary', { name: 'Tambah entitas' }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByTestId('draft-marker')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Tambah' })).toHaveFocus();
+    });
   });
 
   describe('selecting a marker', () => {

@@ -82,7 +82,7 @@ flowchart LR
 **Keputusan implementasi**
 
 - Decoder JSON memakai `DisallowUnknownFields`.
-- Latitude dan longitude didekode ke `*float64`, sehingga nilai kosong dapat dibedakan dari `0`.
+- Field input didekode tanpa tipe, lalu divalidasi di `domain`. Nilai kosong dapat dibedakan dari `0`, dan semua pelanggaran dilaporkan sekaligus.
 - Body dibatasi 64 KiB dengan `http.MaxBytesReader`.
 - Server memakai timeout baca dan tulis serta graceful shutdown pada `SIGINT` dan `SIGTERM`.
 - Migrasi dijalankan saat server start.

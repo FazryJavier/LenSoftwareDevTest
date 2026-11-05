@@ -95,3 +95,10 @@ Sistem SHALL menampilkan pesan kosong saat tidak ada entitas, dan pesan error de
 #### Scenario: Peta dasar gagal dimuat
 - **WHEN** style atau tile peta gagal dimuat
 - **THEN** marker dan pesan aplikasi tetap dapat dipakai
+
+### Requirement: Marker terpilih dapat dibedakan
+Sistem SHALL menampilkan marker entitas terpilih secara berbeda dari marker lain, dan menandainya bagi pembaca layar.
+
+#### Scenario: Marker dipilih
+- **WHEN** pengguna memilih marker
+- **THEN** marker itu tampil lebih besar dengan cincin warna utama, dan memiliki `aria-pressed` bernilai true
