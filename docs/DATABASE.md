@@ -31,7 +31,7 @@ Bila kelak diperlukan riwayat posisi, tabel `entity_locations` dapat ditambahkan
 
 ## 3. Rancangan migrasi awal
 
-File: `backend/migrations/00001_create_entities.sql`. Rancangan ini akan diverifikasi saat US-001 dijalankan.
+File: `backend/migrations/00001_create_entities.sql`. Migrasi ini sudah diuji pada PostgreSQL 18 dengan PostGIS 3.6. Versi Compose, yaitu PostgreSQL 17 dengan PostGIS 3.7, diuji oleh CI.
 
 ```sql
 -- +goose Up
@@ -84,7 +84,7 @@ Pada contoh `INSERT`, `$6` adalah longitude dan `$7` adalah latitude. Pada `ST_M
 
 ## 5. Data contoh
 
-Seed lokal disediakan lewat file SQL terpisah pada US-001, berisi beberapa entitas di sekitar Bandung dan Jakarta. Seed tidak dijalankan otomatis pada database yang sudah berisi data.
+`backend/seed/seed.sql` berisi 6 entitas di sekitar Bandung dan Jakarta. Seed dijalankan manual dan tidak pernah berjalan otomatis. File ini memakai UUID tetap dan `ON CONFLICT DO NOTHING`, sehingga aman dijalankan berulang. Perintahnya ada di [GUIDE](GUIDE.md).
 
 ## 6. Aturan keamanan operasi
 

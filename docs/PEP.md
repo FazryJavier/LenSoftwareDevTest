@@ -11,7 +11,7 @@ Soal memberi waktu **2 hari setelah soal diterima**. File soal tercatat pada 5 N
 | Fase | Keluaran | User story | Status |
 |---|---|---|---|
 | 0. Fondasi dokumen | `docs/`, `CLAUDE.md`, OpenSpec, CI | — | Selesai |
-| 1. Fondasi aplikasi | Docker Compose, skeleton backend dan frontend, migrasi | US-001 | Belum mulai |
+| 1. Fondasi aplikasi | Docker Compose, skeleton backend dan frontend, migrasi | US-001 | Sedang dikerjakan |
 | 2. Lihat data | API list dan detail, peta, panel detail | US-002, US-003 | Belum mulai |
 | 3. Kelola data | Tambah, ubah, hapus | US-004, US-005, US-006 | Belum mulai |
 | 4. Validasi | Pengujian lintas layer untuk semua aturan | US-007 | Belum mulai |

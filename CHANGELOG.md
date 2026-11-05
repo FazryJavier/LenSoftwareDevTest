@@ -2,9 +2,16 @@
 
 Semua perubahan pada proyek ini dicatat di sini, dengan entri terbaru di atas, agar setiap fitur dapat ditelusuri: apa yang berubah, bagaimana caranya, dan bagaimana membuktikannya. Aturan pengisiannya ada di [CLAUDE.md](CLAUDE.md#changelog).
 
-Status saat ini: belum ada kode aplikasi. Semua entri di bawah adalah dokumen dan konfigurasi.
-
 ## 2026-11-06
+
+### US-001: Fondasi aplikasi
+
+- **Jenis:** Added
+- **Apa:** Backend Go dengan `GET /api/v1/health`, frontend React yang menampilkan status koneksi backend, migrasi otomatis tabel `entities`, data contoh, dan Docker Compose. Peta dan CRUD entitas belum termasuk.
+- **Bagaimana:** Backend memakai `net/http`, pgx, dan goose. Semua respons memakai envelope standar, termasuk 404 dan 405 dari router, serta panic yang menjadi 500 tanpa detail internal. Konfigurasi tidak valid menghentikan aplikasi saat start. Aturan kualitas ditegakkan oleh golangci-lint dan ESLint. Port database di host memakai 5433, dan tersedia jalur tanpa Docker lewat `db/local/setup.sql`.
+- **File utama:** `backend/`, `frontend/`, `db/`, `docker-compose.yml`, `docs/GUIDE.md`
+- **Jejak:** US-001, FR-1, NFR-1, OpenSpec `add-project-foundation`, branch `feat/us-001-project-foundation`
+- **Pengujian:** 38 test Go tanpa database dan 16 test Vitest lulus. Test integrasi `internal/store`, migrasi, seed, restart backend, dan respons 503 dibuktikan pada PostgreSQL 18 dengan PostGIS 3.6. Playwright 2 test lulus melalui Vite dan backend lokal. golangci-lint, govulncheck, `npm audit`, ESLint, typecheck, dan build lulus. **Belum terbukti:** build Dockerfile, `docker compose up`, nginx, graceful shutdown, `go test -race`, dan semua job CI di GitHub.
 
 ### Changelog wajib untuk setiap perubahan
 

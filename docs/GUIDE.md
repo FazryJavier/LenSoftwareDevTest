@@ -1,8 +1,12 @@
 # Guide
 
-> **Status:** aplikasi belum diimplementasikan. Panduan ini menggambarkan perilaku yang direncanakan dan harus diperiksa kembali setelah fitur selesai. Status terbaru ada di [README](../README.md#status).
+> **Status:** baru fondasi aplikasi yang tersedia. Bagian 2 dan 3 menggambarkan perilaku yang direncanakan dan harus diperiksa kembali setelah fitur selesai. Status terbaru ada di [README](../README.md#status).
 
 ## 1. Menjalankan aplikasi
+
+### Dengan Docker
+
+> Jalur ini belum dibuktikan di mesin pengembangan karena Docker Desktop gagal berjalan di sana. Pembuktiannya dilakukan oleh job `e2e` di CI.
 
 Prasyarat: Docker dengan Docker Compose, serta koneksi internet untuk memuat tile peta.
 
@@ -28,7 +32,81 @@ docker compose down
 
 Perintah `docker compose down -v` menghapus seluruh data database.
 
-Bila port sudah terpakai, ubah nilainya di `.env`.
+Bila port sudah terpakai, ubah nilainya di `.env`. Database memakai port 5433 di mesin host, agar tidak bentrok dengan PostgreSQL lokal.
+
+Untuk mengisi data contoh:
+
+```bash
+docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < backend/seed/seed.sql
+```
+
+Database `geoentity_test` hanya dibuat otomatis pada volume baru. Pada volume lama, buat secara manual:
+
+```bash
+docker compose exec db sh -c 'createdb -U "$POSTGRES_USER" geoentity_test'
+```
+
+### Tanpa Docker
+
+Jalur ini sudah diuji di Windows dengan PostgreSQL 18 dan PostGIS 3.6. Prasyaratnya PostgreSQL dengan ekstensi PostGIS, Go 1.27, dan Node.js 24. Contoh perintah di bawah memakai PowerShell.
+
+Jalankan sekali dari folder repository. `psql` akan meminta password superuser PostgreSQL:
+
+```powershell
+psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f db/local/setup.sql
+```
+
+Terminal pertama menjalankan backend:
+
+```powershell
+cd backend
+```
+
+```powershell
+$env:DATABASE_URL="postgres://geo:geo_local_only@localhost:5432/geoentity?sslmode=disable"
+```
+
+```powershell
+go run ./cmd/server
+```
+
+Terminal kedua menjalankan frontend:
+
+```powershell
+cd frontend
+```
+
+```powershell
+npm ci
+```
+
+```powershell
+$env:VITE_MAP_STYLE_URL="https://tiles.openfreemap.org/styles/liberty"
+```
+
+```powershell
+npm run dev
+```
+
+Buka http://localhost:5173. Halaman menampilkan **Backend terhubung** bila semuanya berjalan.
+
+Data contoh diisi dengan perintah berikut. Password role `geo` adalah `geo_local_only`:
+
+```powershell
+psql -h localhost -U geo -d geoentity -f backend/seed/seed.sql
+```
+
+Test integrasi membutuhkan `TEST_DATABASE_URL`:
+
+```powershell
+$env:TEST_DATABASE_URL="postgres://geo:geo_local_only@localhost:5432/geoentity_test?sslmode=disable"
+```
+
+```powershell
+cd backend; go test ./...
+```
+
+`npm run test:e2e` membutuhkan backend dan frontend yang sedang berjalan, serta browser dari `npx playwright install chromium`.
 
 ## 2. Menggunakan aplikasi
 

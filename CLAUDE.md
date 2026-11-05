@@ -19,7 +19,7 @@ GeoEntity Manager adalah aplikasi take-home test untuk menampilkan dan mengelola
 | Database | PostgreSQL + PostGIS |
 | Peta | MapLibre + OpenFreeMap |
 
-Kode aplikasi belum dibuat. Mulai dari [US-001](docs/user_stories/US-001.md).
+Status fitur ada di `docs/user_stories/README.md`. Pohon file di bawah adalah bentuk akhir yang dituju, sehingga sebagian file baru dibuat oleh user story berikutnya.
 
 ## Dokumen yang wajib dibaca
 
@@ -54,15 +54,17 @@ Detailnya ada di [WORKFLOW](docs/WORKFLOW.md).
 
 ## Perintah
 
-Perintah aplikasi berlaku setelah US-001 selesai.
-
 ```bash
 docker compose up --build
 ```
 
 ```bash
-cd backend && gofmt -l . && go vet ./... && golangci-lint run && go test -race ./...
+cd backend && gofmt -l . && go vet ./... && go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0 run && go test ./...
 ```
+
+CI menjalankan `go test -race`. Di lokal, `-race` memerlukan cgo dan compiler C, sehingga boleh dilewati bila tidak tersedia, asalkan dilaporkan.
+
+Output `npm run lint`, `ls`, dan sejenisnya dapat diringkas oleh RTK di mesin pemilik proyek. Saat hasilnya menjadi bukti, gunakan exit code atau `rtk proxy <perintah>`, dan jangan menyimpulkan dari `grep` pada output yang sudah diringkas.
 
 ```bash
 cd frontend && npm run format:check && npm run lint && npm run typecheck && npm test && npm run build
@@ -143,6 +145,7 @@ frontend/
 │   │   └── errors.ts              # ApiError
 │   ├── lib/env.ts                 # Satu-satunya pembaca import.meta.env
 │   ├── components/ui/             # Button, Field, Select, Badge, Dialog, Toast, Banner
+│   ├── features/system/           # Status koneksi backend
 │   ├── features/entities/
 │   │   ├── EntitiesPage.tsx       # Menyusun halaman dan memegang state panel
 │   │   ├── api.ts                 # Fungsi endpoint entitas
@@ -182,14 +185,14 @@ frontend/
 
 ## Environment
 
-File `.env` di root hanya dibaca oleh Docker Compose. `.env` tidak di-commit, dan `.env.example` selalu diperbarui bersamaan bila ada variabel baru.
+File `.env` di root hanya dibaca oleh Docker Compose. `.env` tidak di-commit, dan `.env.example` selalu diperbarui bersamaan bila ada variabel baru. Tanpa Docker, variabel disetel langsung di terminal seperti pada `docs/GUIDE.md`.
 
 | Variabel | Dipakai oleh | Wajib | Keterangan |
 |---|---|---|---|
 | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Container database | Ya | Hanya nilai lokal |
-| `POSTGRES_PORT`, `BACKEND_PORT`, `FRONTEND_PORT` | Compose | Ya | Port di mesin host |
+| `POSTGRES_PORT`, `BACKEND_PORT`, `FRONTEND_PORT` | Compose | Tidak | Port di mesin host; default 5433, 8080, dan 5173 |
 | `DATABASE_URL` | Backend | Ya | Tanpa nilai default |
-| `HTTP_ADDR` | Backend | Tidak | Default `:8080` |
+| `HTTP_ADDR` | Backend | Tidak | Default `:8080`; Compose selalu memakai `:8080` di dalam container |
 | `CORS_ALLOWED_ORIGINS` | Backend | Tidak | Dipisah koma; kosong berarti tidak ada origin lain yang diizinkan; `*` ditolak |
 | `TEST_DATABASE_URL` | Test integrasi | Hanya untuk test integrasi | Nama database wajib berakhiran `_test` |
 | `VITE_MAP_STYLE_URL` | Frontend, saat build | Ya | URL style peta |
