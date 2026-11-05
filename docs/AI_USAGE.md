@@ -19,7 +19,8 @@ Alur dan pembagian peran dijelaskan di [WORKFLOW](WORKFLOW.md#2-pembagian-peran)
 - `.claude/settings.json` memblokir perintah destruktif tertentu dan pembacaan `.env`.
 - Proposal OpenSpec harus disetujui kandidat sebelum implementasi.
 - CI memeriksa ulang hasil kerja secara independen.
-- Commit, push, merge, dan pengiriman hasil dilakukan atas instruksi kandidat.
+- Commit dan push dilakukan atas instruksi kandidat, dan PR hanya masuk ke `main` bila CI lulus.
+- Pengiriman hasil dilakukan oleh kandidat.
 
 ## Log pekerjaan
 
@@ -32,8 +33,10 @@ Alur dan pembagian peran dijelaskan di [WORKFLOW](WORKFLOW.md#2-pembagian-peran)
 | 2026-11-05 | Aturan `CLAUDE.md` | Menyusun aturan khusus proyek: struktur backend dan frontend, env, pengujian, dan pencegahan hasil asal jadi | Menyediakan General Rules, menetapkan React + TypeScript sesuai soal, dan akan merevisi aturan khusus proyek | General Rules dibandingkan dengan file sumber, lalu rujukan ke proyek dan alat lain diganti atas permintaan kandidat; cek link. Tinjauan kandidat: menunggu |
 | 2026-11-06 | Changelog wajib | Membuat `CHANGELOG.md`, aturan pengisian, dan job CI | Meminta setiap perubahan dapat ditelusuri | actionlint, uji logika cek pada repository sementara, dan cek link. Belum dijalankan di GitHub |
 | 2026-11-06 | US-001 | Menulis proposal OpenSpec, kode backend dan frontend, test, Dockerfile, Compose, dan dokumen; menjalankan test dan membuktikan perilaku terhadap database lokal | Menyetujui proposal, memilih jalur PostGIS lokal saat Docker gagal, memasang PostGIS, dan menjalankan script database dengan password superuser miliknya | Lihat bagian Pengujian di CHANGELOG. Jalur Docker dan CI belum terbukti. Tinjauan kode oleh kandidat: menunggu |
-| 2026-11-06 | Bukti CI US-001 dan proposal US-002 | Membaca log CI, memeriksa bahwa test benar-benar berjalan, serta menulis proposal OpenSpec US-002 | Meninjau dan menggabungkan PR #1, serta meminta lanjut ke fitur berikutnya | CI lulus 9 dari 9. Validasi OpenSpec strict. Kandidat menyetujui proposal |
-| 2026-11-06 | US-002 | Menulis kode, test, dan dokumen; memeriksa peta di browser sungguhan | Menyetujui proposal | Lihat bagian Pengujian di CHANGELOG. CSP nginx menunggu CI. Tinjauan kode oleh kandidat: menunggu |
+| 2026-11-06 | Bukti CI US-001 dan proposal US-002 | Membaca log CI, memeriksa bahwa test benar-benar berjalan, serta menulis proposal OpenSpec US-002 | Menggabungkan PR #1, serta meminta lanjut ke fitur berikutnya | CI lulus 9 dari 9. Validasi OpenSpec strict. Kandidat menyetujui proposal |
+| 2026-11-06 | US-002 | Menulis kode, test, dan dokumen; memeriksa peta di browser sungguhan | Menyetujui proposal | CI lulus 9 dari 9 pada percobaan kedua, termasuk CSP nginx. PR masuk lewat auto-merge, dan tinjauan kode oleh kandidat tidak tercatat |
+| 2026-11-06 | Aturan merge dan proteksi `main` | Menyiapkan auto-merge dan proteksi `main`; menahan PR dengan CI gagal | Memutuskan bahwa PR tidak perlu approval, menyetujui perubahan setting repository, dan menutup PR Dependabot yang tidak kompatibel atas saran Claude | Setting dibaca kembali dari GitHub |
+| 2026-11-06 | US-003 | Menulis proposal, kode, test, dan dokumen; memeriksa panel di browser | Menyetujui proposal | Lihat bagian Pengujian di CHANGELOG. CI menunggu |
 
 ## Temuan yang dipengaruhi AI
 

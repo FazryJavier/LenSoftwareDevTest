@@ -1,6 +1,6 @@
 # Guide
 
-> **Status:** baru bagian "Melihat entitas" yang tersedia. Bagian lain pada §2 dan §3 menggambarkan perilaku yang direncanakan dan harus diperiksa kembali setelah fitur selesai. Status terbaru ada di [README](../README.md#status).
+> **Status:** baru bagian "Melihat entitas" dan "Melihat detail" yang tersedia. Bagian lain pada §2 dan §3 menggambarkan perilaku yang direncanakan dan harus diperiksa kembali setelah fitur selesai. Status terbaru ada di [README](../README.md#status).
 
 ## 1. Menjalankan aplikasi
 
@@ -116,7 +116,7 @@ Buka aplikasi, lalu geser atau perbesar peta. Peta awal memuat seluruh Indonesia
 
 ### Melihat detail
 
-Pilih marker. Panel samping menampilkan informasi lengkap. Tutup dengan tombol ✕ atau `Esc`.
+Pilih marker. Panel menampilkan informasi lengkap di sisi kanan, atau di bagian bawah pada layar ponsel. Tutup dengan tombol ✕ atau `Esc`.
 
 ### Menambah entitas
 

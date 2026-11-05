@@ -274,6 +274,124 @@ describe('EntitiesPage', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
+  describe('selecting a marker', () => {
+    const SECOND_ID = '0b5f6c1e-3d1a-4c55-9d58-3f0a0a2c1e12';
+    const first = entity({});
+    const second = entity({ id: SECOND_ID, name: 'Sensor Gudang' });
+
+    function detailResponse(data: Entity) {
+      return new Response(
+        JSON.stringify({
+          code: 200,
+          success: true,
+          message: 'OK.',
+          data,
+          errors: null,
+          meta: null,
+        }),
+      );
+    }
+
+    beforeEach(() => {
+      fetchStub.mockImplementation((url) =>
+        Promise.resolve(
+          url.includes('/entities?')
+            ? listResponse([first, second])
+            : detailResponse(url.includes(SECOND_ID) ? second : first),
+        ),
+      );
+    });
+
+    async function selectFirst() {
+      renderLoadedPage();
+      const marker = await screen.findByRole('button', { name: /Truk Logistik/ });
+      await userEvent.click(marker);
+      await screen.findByRole('heading', { name: 'Truk Logistik' });
+      return marker;
+    }
+
+    it('opens the details and marks the marker as selected', async () => {
+      renderLoadedPage();
+      const marker = await screen.findByRole('button', { name: /Truk Logistik/ });
+      expect(marker).toHaveAttribute('aria-pressed', 'false');
+      expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+
+      await userEvent.click(marker);
+
+      expect(await screen.findByRole('heading', { name: 'Truk Logistik' })).toBeInTheDocument();
+      expect(marker).toHaveAttribute('aria-pressed', 'true');
+      expect(marker).toHaveClass('ring-primary');
+    });
+
+    it('switches to another marker without showing the earlier data', async () => {
+      await selectFirst();
+      let finish: (response: Response) => void = () => undefined;
+      fetchStub.mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finish = resolve;
+          }),
+      );
+
+      await userEvent.click(screen.getByRole('button', { name: /Sensor Gudang/ }));
+
+      expect(screen.queryByRole('heading', { name: 'Truk Logistik' })).not.toBeInTheDocument();
+      expect(screen.getByRole('status')).toHaveTextContent('Memuat detail');
+      expect(screen.getByRole('button', { name: /Truk Logistik/ })).toHaveAttribute(
+        'aria-pressed',
+        'false',
+      );
+
+      act(() => {
+        finish(detailResponse(second));
+      });
+      expect(await screen.findByRole('heading', { name: 'Sensor Gudang' })).toBeInTheDocument();
+    });
+
+    it('closes from the close button and returns focus to the marker', async () => {
+      const marker = await selectFirst();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Tutup detail' }));
+
+      expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+      expect(marker).toHaveAttribute('aria-pressed', 'false');
+      expect(marker).toHaveFocus();
+    });
+
+    it('closes with the Escape key and returns focus to the marker', async () => {
+      const marker = await selectFirst();
+
+      await userEvent.keyboard('{Escape}');
+
+      expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+      expect(marker).toHaveFocus();
+    });
+
+    it('ignores the Escape key when no panel is open', async () => {
+      renderLoadedPage();
+      const marker = await screen.findByRole('button', { name: /Truk Logistik/ });
+      marker.focus();
+
+      await userEvent.keyboard('{Escape}');
+
+      expect(marker).toHaveFocus();
+      expect(marker).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('keeps the panel open when the map moves', async () => {
+      await selectFirst();
+
+      act(() => {
+        mapProps().onMoveEnd(view(0, 0, 5, 5));
+      });
+
+      await waitFor(() => {
+        expect(fetchStub.mock.calls.some(([url]) => url.includes('bbox=0.000000'))).toBe(true);
+      });
+      expect(screen.getByRole('heading', { name: 'Truk Logistik' })).toBeInTheDocument();
+    });
+  });
+
   it('renders an entity name containing HTML as plain text', async () => {
     fetchStub.mockResolvedValue(listResponse([entity({ name: '<img src=x onerror=alert(1)>' })]));
 

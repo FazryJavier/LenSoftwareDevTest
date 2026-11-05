@@ -4,7 +4,7 @@ Dokumen ini berisi wireframe low-fidelity dan alur layar sebagai acuan implement
 
 ## 1. Layar utama
 
-Aplikasi memiliki satu halaman. Peta menjadi fokus, dan panel samping berganti isi menurut mode.
+Aplikasi memiliki satu halaman. Peta menjadi fokus, dan panel berganti isi menurut mode. Panel melayang di atas peta, bukan membagi lebarnya, karena perubahan ukuran peta akan memuat ulang data.
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────┐

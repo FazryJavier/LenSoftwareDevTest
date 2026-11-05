@@ -143,6 +143,106 @@ test('still shows markers when the base map cannot be loaded', async ({ page }) 
   await expect(page.getByRole('button', { name: /Truk Logistik/ })).toBeVisible();
 });
 
+test.describe('entity details', () => {
+  const SECOND = {
+    ...ENTITY,
+    id: '0b5f6c1e-3d1a-4c55-9d58-3f0a0a2c1e12',
+    name: 'Sensor Gudang',
+    type: 'iot_device',
+    description: 'Memantau suhu',
+    latitude: -7.2575,
+    longitude: 112.7521,
+  };
+
+  async function stubDetails(page: Page) {
+    await stubBaseMap(page);
+    await page.route(/\/api\/v1\/entities\?/, (route) => fulfillList(route, [ENTITY, SECOND]));
+    await page.route(/\/api\/v1\/entities\/[^?]+$/, (route) =>
+      route.fulfill({
+        json: {
+          code: 200,
+          success: true,
+          message: 'Entity retrieved.',
+          data: route.request().url().endsWith(SECOND.id) ? SECOND : ENTITY,
+          errors: null,
+          meta: null,
+        },
+      }),
+    );
+  }
+
+  test('opens from a marker, switches to another, and closes with Escape', async ({ page }) => {
+    await stubDetails(page);
+    await page.goto('/');
+    const truck = page.getByRole('button', { name: /Truk Logistik/ });
+
+    await truck.click();
+
+    const panel = page.getByRole('complementary', { name: 'Detail entitas' });
+    await expect(panel.getByRole('heading', { name: 'Truk Logistik' })).toBeVisible();
+    await expect(panel.getByText('-6.91750, 107.61910')).toBeVisible();
+    await expect(panel.getByRole('button', { name: 'Tutup detail' })).toBeFocused();
+    await expect(truck).toHaveAttribute('aria-pressed', 'true');
+
+    await page.getByRole('button', { name: /Sensor Gudang/ }).click();
+
+    await expect(panel.getByRole('heading', { name: 'Sensor Gudang' })).toBeVisible();
+    await expect(panel.getByText('Memantau suhu')).toBeVisible();
+    await expect(truck).toHaveAttribute('aria-pressed', 'false');
+
+    await page.keyboard.press('Escape');
+
+    await expect(panel).toBeHidden();
+    await expect(page.getByRole('button', { name: /Sensor Gudang/ })).toBeFocused();
+  });
+
+  test('says when the entity no longer exists', async ({ page }) => {
+    await stubBaseMap(page);
+    await page.route(/\/api\/v1\/entities\?/, (route) => fulfillList(route, [ENTITY]));
+    await page.route(/\/api\/v1\/entities\/[^?]+$/, (route) =>
+      route.fulfill({
+        status: 404,
+        json: {
+          code: 404,
+          success: false,
+          message: 'Entity not found.',
+          data: null,
+          errors: [{ field: null, code: 'not_found', message: 'Entity not found.' }],
+          meta: null,
+        },
+      }),
+    );
+    await page.goto('/');
+
+    await page.getByRole('button', { name: /Truk Logistik/ }).click();
+
+    await expect(page.getByRole('alert')).toContainText('tidak ditemukan');
+  });
+});
+
+test('the real API rejects an invalid entity ID through the proxy', async ({ request }) => {
+  const response = await request.get('/api/v1/entities/not-a-uuid');
+
+  expect(response.status()).toBe(400);
+  expect(await response.json()).toMatchObject({
+    code: 400,
+    success: false,
+    errors: [{ field: 'id', code: 'invalid_id' }],
+  });
+});
+
+test('the real API answers 404 for an unknown entity through the proxy', async ({ request }) => {
+  const response = await request.get('/api/v1/entities/00000000-0000-4000-8000-000000000000');
+
+  expect(response.status()).toBe(404);
+  expect(await response.json()).toMatchObject({
+    code: 404,
+    success: false,
+    message: 'Entity not found.',
+    errors: [{ field: null, code: 'not_found' }],
+  });
+});
+
 test('the real API answers through the proxy with the list contract', async ({ request }) => {
   const response = await request.get('/api/v1/entities?bbox=-180,-90,180,90&per_page=1');
 

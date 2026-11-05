@@ -6,13 +6,13 @@ Aplikasi web untuk menampilkan dan mengelola entitas berlokasi geografis, sepert
 
 ## Status
 
-> Saat ini aplikasi dapat menampilkan entitas tersimpan pada peta. **Detail, tambah, ubah, dan hapus entitas dari UI belum dibuat.** Jalur Docker Compose terbukti di CI, tetapi belum dicoba di mesin pengembangan karena Docker Desktop gagal berjalan di sana.
+> Saat ini aplikasi dapat menampilkan entitas tersimpan pada peta dan membuka detailnya. **Tambah, ubah, dan hapus entitas dari UI belum dibuat.** Jalur Docker Compose terbukti di CI, tetapi belum dicoba di mesin pengembangan karena Docker Desktop gagal berjalan di sana.
 
 | Fitur | User story | Status |
 |---|---|---|
 | Fondasi aplikasi | [US-001](docs/user_stories/US-001.md) | Sedang dikerjakan |
-| Menampilkan entitas pada peta | [US-002](docs/user_stories/US-002.md) | Sedang dikerjakan |
-| Melihat detail entitas | [US-003](docs/user_stories/US-003.md) | Belum mulai |
+| Menampilkan entitas pada peta | [US-002](docs/user_stories/US-002.md) | Selesai |
+| Melihat detail entitas | [US-003](docs/user_stories/US-003.md) | Sedang dikerjakan |
 | Menambah entitas | [US-004](docs/user_stories/US-004.md) | Belum mulai |
 | Mengubah entitas | [US-005](docs/user_stories/US-005.md) | Belum mulai |
 | Menghapus entitas | [US-006](docs/user_stories/US-006.md) | Belum mulai |

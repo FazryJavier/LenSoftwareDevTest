@@ -20,9 +20,7 @@ flowchart TD
     docs --> pr["Pull Request"]
     pr --> ci["CI dan autofix"]
     ci -- "Gagal" --> apply
-    ci -- "Hijau" --> gate2{"Kandidat setuju merge?"}
-    gate2 -- "Ya" --> merge["Merge ke main"]
-    gate2 -- "Tidak" --> apply
+    ci -- "Hijau" --> merge["Auto-merge ke main"]
 ```
 
 ## 2. Pembagian peran
@@ -34,7 +32,8 @@ flowchart TD
 | Proposal OpenSpec | Menulis | **Menyetujui sebelum implementasi** |
 | Kode dan test | Menulis dan menjalankan | Meninjau hasil |
 | Commit, push, dan PR | Menjalankan bila diminta | Meminta dan meninjau |
-| Merge dan pengiriman hasil | Tidak melakukan tanpa instruksi | **Memutuskan dan menjalankan** |
+| Merge | Mengaktifkan auto-merge pada PR | Dapat meninjau PR kapan saja; tanpa approval wajib |
+| Pengiriman hasil | Tidak melakukan | **Memutuskan dan menjalankan** |
 
 ## 3. OpenSpec
 
@@ -58,7 +57,8 @@ Hubungannya dengan `docs/`: dokumen di `docs/` menjawab **apa dan mengapa** di t
 
 ## 4. Git
 
-- `main` hanya berubah lewat Pull Request. Pengecualiannya adalah commit awal repository.
+- `main` diproteksi dan hanya berubah lewat Pull Request. Pengecualiannya adalah commit awal repository.
+- PR wajib lulus `CI success`, lalu masuk otomatis lewat auto-merge. Review tidak wajib, sesuai keputusan kandidat untuk mengejar tenggat.
 - Nama branch: `feat/us-XXX-slug`, `fix/slug`, `docs/slug`, atau `chore/slug`.
 - Format commit ada di [CLAUDE.md](../CLAUDE.md#git).
 
