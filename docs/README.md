@@ -13,6 +13,7 @@
 | [DESIGN_SYSTEM](DESIGN_SYSTEM.md) | Token, komponen, dan aksesibilitas |
 | [PROTOTYPE](PROTOTYPE.md) | Wireframe dan alur layar |
 | [GUIDE](GUIDE.md) | Cara menjalankan dan memakai aplikasi |
+| [Struktur repository](../README.md#struktur-repository) | Fungsi setiap folder dan file |
 | [WORKFLOW](WORKFLOW.md) | Alur kerja, OpenSpec, CI, dan autofix |
 | [AI_USAGE](AI_USAGE.md) | Sejauh mana Agentic AI digunakan |
 | [CHANGELOG](../CHANGELOG.md) | Riwayat perubahan dan jejak setiap fitur |

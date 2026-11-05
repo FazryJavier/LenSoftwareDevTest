@@ -19,7 +19,7 @@ GeoEntity Manager adalah aplikasi take-home test untuk menampilkan dan mengelola
 | Database | PostgreSQL + PostGIS |
 | Peta | MapLibre + OpenFreeMap |
 
-Status fitur ada di `docs/user_stories/README.md`. Pohon file di bawah adalah bentuk akhir yang dituju, sehingga sebagian file baru dibuat oleh user story berikutnya.
+Status fitur ada di `docs/user_stories/README.md`. Pohon file di bawah menunjukkan penempatan kode dan aturannya. Fungsi setiap folder dan file ada di [README](README.md#struktur-repository).
 
 ## Dokumen yang wajib dibaca
 
@@ -56,6 +56,14 @@ Detailnya ada di [WORKFLOW](docs/WORKFLOW.md).
 
 ```bash
 docker compose up --build
+```
+
+```bash
+npm run dev:backend
+```
+
+```bash
+npm run dev:frontend
 ```
 
 ```bash
@@ -111,7 +119,8 @@ backend/
 │       └── entity_store.go    # Semua query entities
 ├── migrations/
 │   ├── embed.go               # go:embed untuk goose
-│   └── 00001_create_entities.sql
+│   ├── 00001_create_entities.sql
+│   └── 00002_use_geometry_location_index.sql
 ├── seed/seed.sql              # Data contoh lokal
 ├── Dockerfile
 ├── .golangci.yml
@@ -149,7 +158,7 @@ frontend/
 │   │   ├── client.ts              # Satu-satunya pemanggil fetch, membongkar envelope
 │   │   └── errors.ts              # ApiError
 │   ├── lib/env.ts                 # Satu-satunya pembaca import.meta.env
-│   ├── components/ui/             # Button, Field, Select, Badge, Dialog, Toast, Banner
+│   ├── components/ui/             # Button, Field (termasuk TextInput, TextArea, Select), Dialog, Toast, Banner
 │   ├── features/entities/
 │   │   ├── EntitiesPage.tsx       # Menyusun halaman dan memegang state panel
 │   │   ├── api.ts                 # Fungsi endpoint entitas
@@ -158,6 +167,7 @@ frontend/
 │   │   ├── formSchema.ts          # Skema form Zod dan payload API
 │   │   ├── formErrors.ts          # Error API menjadi pesan form
 │   │   ├── usePanel.ts            # Mode panel dan pengembalian fokus
+│   │   ├── useEntityFilters.ts    # Filter pada URL
 │   │   ├── hooks.ts               # Hook TanStack Query dan query key
 │   │   ├── schema.ts              # Skema Zod dan tipe turunannya
 │   │   ├── constants.ts           # Label dan ikon per jenis dan status
@@ -196,7 +206,7 @@ frontend/
 
 ## Environment
 
-File `.env` di root hanya dibaca oleh Docker Compose. `.env` tidak di-commit, dan `.env.example` selalu diperbarui bersamaan bila ada variabel baru. Tanpa Docker, variabel disetel langsung di terminal seperti pada `docs/GUIDE.md`.
+File `.env` di root hanya dibaca oleh Docker Compose. `.env` tidak di-commit, dan `.env.example` selalu diperbarui bersamaan bila ada variabel baru. Tanpa Docker, `npm run dev:backend` dan `npm run dev:frontend` di root memakai nilai lokal dari `scripts/dev.mjs`, dan variabel yang disetel di terminal lebih diutamakan. Lihat `docs/GUIDE.md`.
 
 | Variabel | Dipakai oleh | Wajib | Keterangan |
 |---|---|---|---|

@@ -1,0 +1,8 @@
+{
+  "name": "geoentity",
+  "private": true,
+  "scripts": {
+    "dev:backend": "node scripts/dev.mjs backend",
+    "dev:frontend": "node scripts/dev.mjs frontend"
+  }
+}

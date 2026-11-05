@@ -30,7 +30,7 @@ flowchart TD
 | Kebutuhan | Menyusun draf dokumen | Menentukan arah dan menyetujui |
 | Keputusan teknis | Mengusulkan, mengecek kompatibilitas | Memutuskan |
 | Proposal OpenSpec | Menulis | **Menyetujui sebelum implementasi**; US-006 sampai US-008 disetujui sekaligus |
-| Kode dan test | Menulis dan menjalankan | Meninjau hasil |
+| Kode dan test | Menulis dan menjalankan | Dapat meninjau hasil; tidak wajib sebelum merge |
 | Commit, push, dan PR | Menjalankan bila diminta | Meminta dan meninjau |
 | Merge | Mengaktifkan auto-merge pada PR | Dapat meninjau PR kapan saja; tanpa approval wajib |
 | Pengiriman hasil | Tidak melakukan | **Memutuskan dan menjalankan** |
@@ -76,7 +76,7 @@ Workflow [`ci.yml`](../.github/workflows/ci.yml) berjalan pada setiap Pull Reque
 | `e2e` | Compose, Playwright, dan koleksi kontrak lewat Newman | `frontend/playwright.config.ts` ada |
 | `ci-success` | Menggabungkan hasil; job ini yang dijadikan required check | Selalu |
 
-Job backend, frontend, dan e2e dilewati selama kodenya belum ada, lalu aktif sendiri setelah US-001 tanpa perubahan workflow.
+Job `detect` memeriksa keberadaan file tersebut. Semua file itu sudah ada, sehingga job backend, frontend, dan e2e kini selalu berjalan.
 
 ## 6. Autofix
 
@@ -90,7 +90,7 @@ Batasannya:
 - Tidak mengubah logika, dan tidak memperbaiki test yang gagal.
 - Commit dari `GITHUB_TOKEN` tidak memicu workflow, sehingga mencegah perulangan. CI dipicu lewat `workflow_dispatch`, yang hanya tersedia setelah `ci.yml` berada di `main`.
 
-**b. Auto-fix di Claude Code desktop** dapat diaktifkan per sesi untuk memantau PR. Claude dibangunkan saat CI gagal atau ada komentar review, lalu memperbaikinya. Ini fitur aplikasi, bukan file di repository, dan tetap ditinjau kandidat.
+**b. Auto-fix di Claude Code desktop** dapat diaktifkan per sesi untuk memantau PR. Claude dibangunkan saat CI gagal atau ada komentar review, lalu memperbaikinya. Ini fitur aplikasi, bukan file di repository. Hasilnya tetap harus lulus CI, dan kandidat dapat meninjaunya.
 
 ## 7. Saat menemukan masalah
 

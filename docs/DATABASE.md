@@ -29,7 +29,7 @@ Bila kelak diperlukan riwayat posisi, tabel `entity_locations` dapat ditambahkan
 
 **Urutan koordinat:** PostGIS menerima `ST_MakePoint(longitude, latitude)`. API memakai field bernama `latitude` dan `longitude`, sehingga urutan ini hanya berlaku di lapisan `store`. Keduanya mudah tertukar dan wajib dicakup test integrasi.
 
-## 3. Rancangan migrasi awal
+## 3. Migrasi awal
 
 File: `backend/migrations/00001_create_entities.sql`. Migrasi ini sudah diuji pada PostgreSQL 18 dengan PostGIS 3.6. Versi Compose, yaitu PostgreSQL 17 dengan PostGIS 3.7, diuji oleh CI.
 
@@ -72,10 +72,12 @@ SELECT id, name, type, status, description, attributes,
 FROM entities
 WHERE id = $1;
 
--- Filter area peta
+-- Filter area peta, jenis, dan status. Kondisi hanya disertakan bila filternya ada.
 WHERE ST_Intersects(location::geometry, ST_MakeEnvelope($1, $2, $3, $4, 4326))
+  AND type = ANY($5)
+  AND status = ANY($6)
 ORDER BY created_at DESC, id DESC
-LIMIT $5 OFFSET $6;
+LIMIT $7 OFFSET $8;
 
 -- Menyimpan koordinat
 INSERT INTO entities (name, type, status, description, attributes, location)

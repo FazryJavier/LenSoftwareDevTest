@@ -11,7 +11,7 @@ Dokumen ini menjelaskan teknologi yang dipilih, alasannya, dan alternatif yang d
 
 ## 2. Pilihan teknologi
 
-Versi dicek pada 5 November 2026. Nilai akhir dikunci oleh `package-lock.json` dan `go.sum` saat scaffolding.
+Versi dicek pada 5 November 2026. Nilai persisnya dikunci oleh `package-lock.json` dan `go.sum`.
 
 ### Backend
 
@@ -44,8 +44,8 @@ Versi dicek pada 5 November 2026. Nilai akhir dikunci oleh `package-lock.json` d
 | Form | React Hook Form | 7 | Performa baik dan integrasi resolver | Formik: pemeliharaan kurang aktif |
 | Validasi | Zod + `@hookform/resolvers` | 4 + 7 | Skema sekaligus tipe TypeScript | Yup: inferensi tipe lebih lemah |
 | Styling | Tailwind CSS | 4 | Cepat dan konsisten dengan token desain | CSS Modules: perlu lebih banyak CSS manual |
-| Ikon | `lucide-react` | terbaru saat scaffolding | Ikon SVG yang bisa di-tree-shake | — |
-| Unit test | Vitest + Testing Library + jsdom | 5 + 16 + 29 | Satu konfigurasi dengan Vite; jsdom menyediakan DOM untuk test | Jest: perlu konfigurasi transform |
+| Ikon | `lucide-react` | 1 | Ikon SVG yang bisa di-tree-shake | — |
+| Unit test | Vitest + Testing Library + jsdom | 5 + 16 + 30 | Satu konfigurasi dengan Vite; jsdom menyediakan DOM untuk test | Jest: perlu konfigurasi transform |
 | E2E test | Playwright | 1.64 | Menguji alur nyata pada browser | Cypress: lebih berat di CI |
 | Lint dan format | ESLint + typescript-eslint + Prettier | 10 + 8 + 3 | Standar ekosistem | — |
 

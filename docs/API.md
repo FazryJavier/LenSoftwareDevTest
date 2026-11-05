@@ -1,6 +1,6 @@
 # API
 
-Kontrak formal ada di [openapi.yaml](openapi.yaml). Dokumen ini merangkum aturan yang perlu diingat saat implementasi. Bila keduanya berbeda, `openapi.yaml` yang berlaku dan perbedaannya harus diperbaiki.
+Kontrak formal ada di [openapi.yaml](openapi.yaml). Dokumen ini merangkum aturan utamanya. Bila keduanya berbeda, `openapi.yaml` yang berlaku dan perbedaannya harus diperbaiki.
 
 Base path: `/api/v1`. API belum memakai autentikasi ([PRD §7](PRD.md#7-di-luar-ruang-lingkup)).
 
@@ -109,7 +109,7 @@ Urutan hasil: `created_at` menurun, lalu `id` menurun. `bbox` yang melintasi ant
 | 400 | JSON rusak, field tidak dikenal, query atau UUID tidak valid | `malformed_json`, `unknown_field`, `invalid_query`, `invalid_id` |
 | 404 | Entitas atau rute tidak ditemukan | `not_found` |
 | 405 | Method tidak didukung | `method_not_allowed` |
-| 413 | Body melebihi 64 KiB | `payload_too_large` |
+| 413 | Body melebihi 64 KiB. Lihat batasannya di [README](../README.md#yang-belum-selesai) | `payload_too_large` |
 | 415 | `Content-Type` bukan `application/json` | `unsupported_media_type` |
 | 422 | Isi valid secara JSON tetapi melanggar aturan | Kode pada [PRD §5](PRD.md#5-aturan-validasi) |
 | 500 | Kesalahan internal | `internal_error` |

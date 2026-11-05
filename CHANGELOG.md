@@ -4,6 +4,24 @@ Semua perubahan pada proyek ini dicatat di sini, dengan entri terbaru di atas, a
 
 ## 2026-11-06
 
+### Perintah menjalankan aplikasi tanpa Docker
+
+- **Jenis:** Added
+- **Apa:** Backend dan frontend dapat dijalankan dari root dengan `npm run dev:backend` dan `npm run dev:frontend`, tanpa pindah folder, menyetel env, atau membuat `.env`. Frontend memasang dependensi otomatis bila `node_modules` belum ada.
+- **Bagaimana:** `scripts/dev.mjs` berpindah ke folder layanan dan mengisi `DATABASE_URL` serta `VITE_MAP_STYLE_URL` dengan nilai lokal. Variabel yang disetel di terminal lebih diutamakan. `.env` tidak dibaca karena `DATABASE_URL` di sana menunjuk host `db` milik Compose. Tanpa dependensi baru, dan `go run` serta `npm run dev` tetap dapat dijalankan langsung dengan env manual.
+- **File utama:** `scripts/dev.mjs`, `package.json`, `docs/GUIDE.md`
+- **Jejak:** Permintaan pemilik proyek, tanpa user story
+- **Pengujian:** Dijalankan dari salinan bersih tanpa `node_modules` dan tanpa env, pada port uji 18080 dan 5174: `npm ci` otomatis berjalan, health backend dan health lewat proxy Vite membalas 200, dan Edge headless menampilkan peta dengan marker tanpa error console. Argumen kosong dan tidak dikenal keluar dengan kode 2. Belum diuji: `Ctrl+C` interaktif, macOS, dan Linux. Script belum memiliki unit test. Di browser pane Claude Desktop, peta kosong baik lewat script maupun lewat server yang dijalankan tanpa script.
+
+### Dokumentasi untuk pengiriman
+
+- **Jenis:** Changed
+- **Apa:** README kini menjawab setiap poin PDF soal, menjelaskan yang belum selesai, cara menjalankan dengan dan tanpa Docker, alasan setiap library, sejauh mana Agentic AI dipakai, serta fungsi setiap folder dan file. Dokumen yang tertinggal dari kode diperbaiki.
+- **Bagaimana:** Semua dokumen dibandingkan dengan PDF dan kode. Struktur repository dipusatkan di README, dan `ARCHITECTURE.md` menautkannya. README dan `GUIDE.md` kini menjelaskan alasan `.env` di root tidak dipakai saat berjalan tanpa Docker. Klaim bahwa hasil AI selalu ditinjau kandidat diperbaiki, karena review tidak wajib.
+- **File utama:** `README.md`, `docs/ARCHITECTURE.md`, `docs/WORKFLOW.md`, `docs/ITA.md`, `docs/GUIDE.md`, `docs/DATABASE.md`, `docs/PEP.md`, `CLAUDE.md`
+- **Jejak:** Permintaan pemilik proyek, branch `docs/readme-submission`
+- **Pengujian:** Pemeriksaan tautan, skrip yang memastikan setiap file terlacak disebut README, lint OpenAPI, dan validasi OpenSpec dijalankan. Kode aplikasi tidak berubah.
+
 ### US-008: Selesai
 
 - **Jenis:** Changed
