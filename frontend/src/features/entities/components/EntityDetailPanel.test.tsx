@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Entity } from '../schema';
@@ -43,11 +43,12 @@ function failure(status: number, code: string) {
 const fetchStub = vi.fn<() => Promise<Response>>();
 const onClose = vi.fn();
 const onEdit = vi.fn();
+const onDeleted = vi.fn();
 
 function renderPanel() {
   render(
     <QueryClientProvider client={new QueryClient()}>
-      <EntityDetailPanel entityId={ID} onClose={onClose} onEdit={onEdit} />
+      <EntityDetailPanel entityId={ID} onClose={onClose} onEdit={onEdit} onDeleted={onDeleted} />
     </QueryClientProvider>,
   );
 }
@@ -57,6 +58,7 @@ describe('EntityDetailPanel', () => {
     fetchStub.mockReset();
     onClose.mockReset();
     onEdit.mockReset();
+    onDeleted.mockReset();
     vi.stubGlobal('fetch', fetchStub);
   });
 
@@ -146,6 +148,84 @@ describe('EntityDetailPanel', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Ubah' }));
 
     expect(onEdit).toHaveBeenCalledWith(ENTITY);
+  });
+
+  describe('deleting', () => {
+    const deletes = () => fetchStub.mock.calls.length - 1;
+
+    async function openDialog() {
+      fetchStub.mockResolvedValueOnce(success(ENTITY));
+      renderPanel();
+      await userEvent.click(await screen.findByRole('button', { name: 'Hapus' }));
+      return screen.getByRole('dialog', { name: 'Hapus entitas?' });
+    }
+
+    it('names the entity and sends nothing until confirmed', async () => {
+      const dialog = await openDialog();
+
+      expect(dialog).toHaveTextContent('Truk Logistik');
+      expect(deletes()).toBe(0);
+    });
+
+    it('sends nothing when cancelled', async () => {
+      const dialog = await openDialog();
+
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Batal' }));
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(deletes()).toBe(0);
+      expect(onDeleted).not.toHaveBeenCalled();
+    });
+
+    it('reports success after confirming', async () => {
+      const dialog = await openDialog();
+      fetchStub.mockResolvedValueOnce(success(null));
+
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Hapus' }));
+
+      await waitFor(() => {
+        expect(onDeleted).toHaveBeenCalledWith('Entitas berhasil dihapus.');
+      });
+    });
+
+    it('treats a 404 as already gone', async () => {
+      const dialog = await openDialog();
+      fetchStub.mockResolvedValueOnce(failure(404, 'not_found'));
+
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Hapus' }));
+
+      await waitFor(() => {
+        expect(onDeleted).toHaveBeenCalledWith('Entitas ini sudah tidak ada.');
+      });
+    });
+
+    it('keeps the dialog open with a message on failure, and can try again', async () => {
+      const dialog = await openDialog();
+      fetchStub.mockResolvedValueOnce(failure(500, 'internal_error'));
+
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Hapus' }));
+
+      expect(await within(dialog).findByRole('alert')).toHaveTextContent('gagal dihapus');
+      expect(onDeleted).not.toHaveBeenCalled();
+
+      fetchStub.mockResolvedValueOnce(success(null));
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Hapus' }));
+
+      await waitFor(() => {
+        expect(onDeleted).toHaveBeenCalledWith('Entitas berhasil dihapus.');
+      });
+    });
+
+    it('shows the name as plain text', async () => {
+      const html = '<img src=x onerror=alert(1)>';
+      fetchStub.mockResolvedValueOnce(success({ ...ENTITY, name: html }));
+      renderPanel();
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Hapus' }));
+
+      expect(screen.getByRole('dialog')).toHaveTextContent(html);
+      expect(document.querySelector('img')).toBeNull();
+    });
   });
 
   it('calls onClose from the close button', async () => {

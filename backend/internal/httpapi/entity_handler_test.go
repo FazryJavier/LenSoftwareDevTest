@@ -23,6 +23,11 @@ type fakeEntityStore struct {
 	updated    bool
 }
 
+func (f *fakeEntityStore) Delete(_ context.Context, id string) error {
+	f.lastID = id
+	return f.err
+}
+
 func (f *fakeEntityStore) Update(_ context.Context, id string, input domain.EntityInput) (domain.Entity, error) {
 	f.updated = true
 	f.lastID = id

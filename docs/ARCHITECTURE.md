@@ -142,7 +142,8 @@ Semua konfigurasi berasal dari environment. `.env` tidak di-commit; contohnya ad
 |---|---|---|
 | Unit backend | `go test` | Validasi domain, handler dengan store palsu |
 | Integrasi backend | `go test` + PostGIS | Migrasi, query, filter, `bbox` |
-| Kontrak API | Postman CLI + koleksi di `postman/` | Envelope dan kode status terhadap server yang berjalan |
+| Kontrak API | Koleksi di `postman/`, lewat Newman atau Postman CLI | Envelope dan kode status terhadap server yang berjalan |
+| Kesamaan aturan | `testdata/validation-cases.json`, dijalankan Go dan Vitest | Keputusan validasi frontend dan backend tetap sama |
 | Unit frontend | Vitest + Testing Library | Skema Zod, form, klien API |
 | End-to-end | Playwright | Alur tambah, lihat, ubah, hapus di browser |
 

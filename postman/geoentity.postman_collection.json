@@ -1,0 +1,283 @@
+{
+  "info": {
+    "name": "GeoEntity Manager API",
+    "description": "Contract tests against a running server. Set baseUrl, for example http://localhost:8080/api/v1. The collection creates its own entity and deletes it again.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [{ "key": "baseUrl", "value": "http://localhost:8080/api/v1" }],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('uses the standard envelope, and code matches the HTTP status', function () {",
+          "  const body = pm.response.json();",
+          "  pm.expect(body).to.have.all.keys('code', 'success', 'message', 'data', 'errors', 'meta');",
+          "  pm.expect(body.code).to.equal(pm.response.code);",
+          "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+          "  const succeeded = pm.response.code < 400;",
+          "  pm.expect(body.success).to.equal(succeeded);",
+          "  if (succeeded) {",
+          "    pm.expect(body.errors).to.equal(null);",
+          "  } else {",
+          "    pm.expect(body.data).to.equal(null);",
+          "    pm.expect(body.meta).to.equal(null);",
+          "    pm.expect(body.errors).to.be.an('array').and.not.empty;",
+          "    body.errors.forEach(function (item) {",
+          "      pm.expect(item).to.have.all.keys('field', 'code', 'message');",
+          "    });",
+          "  }",
+          "});",
+          "pm.test('has a request ID header', function () {",
+          "  pm.expect(pm.response.headers.get('X-Request-ID')).to.be.a('string').and.not.empty;",
+          "});"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": { "method": "GET", "url": "{{baseUrl}}/health" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('answers 200', function () { pm.response.to.have.status(200); });"
+      ] } }]
+    },
+    {
+      "name": "Create entity",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/entities",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"name\":\"  E2E Postman  \",\"type\":\"vehicle\",\"status\":\"active\",\"description\":\"Kontrak\",\"attributes\":{\"plate_number\":\"D 1\"},\"latitude\":-6.9175,\"longitude\":107.6191}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('answers 201 with the saved entity', function () {",
+        "  pm.response.to.have.status(201);",
+        "  const entity = pm.response.json().data;",
+        "  pm.expect(entity.name).to.equal('E2E Postman');",
+        "  pm.expect(entity.latitude).to.equal(-6.9175);",
+        "  pm.expect(entity.longitude).to.equal(107.6191);",
+        "  pm.expect(pm.response.headers.get('Location')).to.equal('/api/v1/entities/' + entity.id);",
+        "  pm.collectionVariables.set('entityId', entity.id);",
+        "});"
+      ] } }]
+    },
+    {
+      "name": "Get entity",
+      "request": { "method": "GET", "url": "{{baseUrl}}/entities/{{entityId}}" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('answers 200 with the same entity', function () {",
+        "  pm.response.to.have.status(200);",
+        "  const body = pm.response.json();",
+        "  pm.expect(body.data.id).to.equal(pm.collectionVariables.get('entityId'));",
+        "  pm.expect(body.data.attributes.plate_number).to.equal('D 1');",
+        "  pm.expect(body.meta).to.equal(null);",
+        "});"
+      ] } }]
+    },
+    {
+      "name": "List entities in an area",
+      "request": { "method": "GET", "url": "{{baseUrl}}/entities?bbox=107,-7,108,-6&per_page=500" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('includes the entity, with pagination in meta', function () {",
+        "  pm.response.to.have.status(200);",
+        "  const body = pm.response.json();",
+        "  const ids = body.data.map(function (entity) { return entity.id; });",
+        "  pm.expect(ids).to.include(pm.collectionVariables.get('entityId'));",
+        "  pm.expect(body.meta).to.have.all.keys('page', 'per_page', 'total', 'total_pages');",
+        "  pm.expect(body.meta.per_page).to.equal(500);",
+        "});"
+      ] } }]
+    },
+    {
+      "name": "List entities outside the area",
+      "request": { "method": "GET", "url": "{{baseUrl}}/entities?bbox=-10,50,-9,51" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('does not include the entity', function () {",
+        "  pm.response.to.have.status(200);",
+        "  const ids = pm.response.json().data.map(function (entity) { return entity.id; });",
+        "  pm.expect(ids).to.not.include(pm.collectionVariables.get('entityId'));",
+        "});"
+      ] } }]
+    },
+    {
+      "name": "Update entity",
+      "request": {
+        "method": "PUT",
+        "url": "{{baseUrl}}/entities/{{entityId}}",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"name\":\"E2E Postman Baru\",\"type\":\"facility\",\"status\":\"maintenance\",\"latitude\":0,\"longitude\":0}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('answers 200 and replaces every field', function () {",
+        "  pm.response.to.have.status(200);",
+        "  const entity = pm.response.json().data;",
+        "  pm.expect(entity.name).to.equal('E2E Postman Baru');",
+        "  pm.expect(entity.latitude).to.equal(0);",
+        "  pm.expect(entity.description).to.equal(null);",
+        "  pm.expect(entity.attributes).to.eql({});",
+        "});"
+      ] } }]
+    },
+    {
+      "name": "Reject many broken rules",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/entities",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"name\":\"\",\"type\":\"spaceship\",\"latitude\":91,\"longitude\":\"east\",\"attributes\":{\"a b\":\"v\"}}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('answers 422 with every violation', function () {",
+        "  pm.response.to.have.status(422);",
+        "  const found = {};",
+        "  pm.response.json().errors.forEach(function (item) { found[item.field] = item.code; });",
+        "  pm.expect(found).to.eql({",
+        "    name: 'required', type: 'invalid_enum', status: 'required',",
+        "    latitude: 'out_of_range', longitude: 'invalid_type', 'attributes.a b': 'invalid_format'",
+        "  });",
+        "});"
+      ] } }]
+    },
+    {
+      "name": "Reject broken JSON",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/entities",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"name\":" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('answers 400 malformed_json', function () {",
+        "  pm.response.to.have.status(400);",
+        "  pm.expect(pm.response.json().errors[0].code).to.equal('malformed_json');",
+        "});"
+      ] } }]
+    },
+    {
+      "name": "Reject an unknown field",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/entities",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"owner\":\"me\"}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('answers 400 unknown_field naming the field', function () {",
+        "  pm.response.to.have.status(400);",
+        "  const item = pm.response.json().errors[0];",
+        "  pm.expect(item.code).to.equal('unknown_field');",
+        "  pm.expect(item.field).to.equal('owner');",
+        "});"
+      ] } }]
+    },
+    {
+      "name": "Reject the wrong content type",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/entities",
+        "header": [{ "key": "Content-Type", "value": "text/plain" }],
+        "body": { "mode": "raw", "raw": "{}" }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('answers 415', function () {",
+        "  pm.response.to.have.status(415);",
+        "  pm.expect(pm.response.json().errors[0].code).to.equal('unsupported_media_type');",
+        "});"
+      ] } }]
+    },
+    {
+      "name": "Reject a body that is too large",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/entities",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{{largeBody}}" }
+      },
+      "event": [
+        { "listen": "prerequest", "script": { "type": "text/javascript", "exec": [
+          "pm.collectionVariables.set('largeBody', JSON.stringify({ name: 'a'.repeat(70000) }));"
+        ] } },
+        { "listen": "test", "script": { "type": "text/javascript", "exec": [
+          "pm.test('answers 413', function () {",
+          "  pm.response.to.have.status(413);",
+          "  pm.expect(pm.response.json().errors[0].code).to.equal('payload_too_large');",
+          "});"
+        ] } }
+      ]
+    },
+    {
+      "name": "Reject an invalid ID",
+      "request": { "method": "GET", "url": "{{baseUrl}}/entities/not-a-uuid" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('answers 400 invalid_id', function () {",
+        "  pm.response.to.have.status(400);",
+        "  pm.expect(pm.response.json().errors[0].code).to.equal('invalid_id');",
+        "});"
+      ] } }]
+    },
+    {
+      "name": "Reject an invalid area",
+      "request": { "method": "GET", "url": "{{baseUrl}}/entities?bbox=bad&page=0" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('answers 400 naming each parameter', function () {",
+        "  pm.response.to.have.status(400);",
+        "  const fields = pm.response.json().errors.map(function (item) { return item.field; });",
+        "  pm.expect(fields).to.have.members(['bbox', 'page']);",
+        "});"
+      ] } }]
+    },
+    {
+      "name": "Reject an unsupported method",
+      "request": { "method": "PATCH", "url": "{{baseUrl}}/entities/{{entityId}}" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('answers 405 with an Allow header', function () {",
+        "  pm.response.to.have.status(405);",
+        "  pm.expect(pm.response.json().errors[0].code).to.equal('method_not_allowed');",
+        "  pm.expect(pm.response.headers.get('Allow')).to.include('GET');",
+        "});"
+      ] } }]
+    },
+    {
+      "name": "Reject an unknown route",
+      "request": { "method": "GET", "url": "{{baseUrl}}/nope" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('answers 404', function () {",
+        "  pm.response.to.have.status(404);",
+        "  pm.expect(pm.response.json().errors[0].code).to.equal('not_found');",
+        "});"
+      ] } }]
+    },
+    {
+      "name": "Delete entity",
+      "request": { "method": "DELETE", "url": "{{baseUrl}}/entities/{{entityId}}" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('answers 200 with null data', function () {",
+        "  pm.response.to.have.status(200);",
+        "  pm.expect(pm.response.json().data).to.equal(null);",
+        "});"
+      ] } }]
+    },
+    {
+      "name": "Get the deleted entity",
+      "request": { "method": "GET", "url": "{{baseUrl}}/entities/{{entityId}}" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('answers 404', function () {",
+        "  pm.response.to.have.status(404);",
+        "  pm.expect(pm.response.json().errors[0].code).to.equal('not_found');",
+        "});"
+      ] } }]
+    },
+    {
+      "name": "Delete the deleted entity",
+      "request": { "method": "DELETE", "url": "{{baseUrl}}/entities/{{entityId}}" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('answers 404', function () {",
+        "  pm.response.to.have.status(404);",
+        "});"
+      ] } }]
+    }
+  ]
+}

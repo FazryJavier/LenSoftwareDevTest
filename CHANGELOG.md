@@ -4,6 +4,33 @@ Semua perubahan pada proyek ini dicatat di sini, dengan entri terbaru di atas, a
 
 ## 2026-11-06
 
+### US-007: Validasi lintas layer
+
+- **Jenis:** Added
+- **Apa:** Aturan validasi frontend dan backend kini dibuktikan sama lewat satu daftar kasus, dan kontrak API diuji terhadap server yang berjalan. Tidak ada perilaku aplikasi yang berubah.
+- **Bagaimana:** `testdata/validation-cases.json` berisi kasus per baris PRD §5, dan dijalankan oleh test Go serta Vitest. Koleksi Postman menguji alur CRUD serta 400, 404, 405, 413, 415, dan 422, termasuk bentuk envelope pada setiap respons. CI menjalankan koleksi itu terhadap Compose.
+- **File utama:** `testdata/validation-cases.json`, `backend/internal/domain/validate_cases_test.go`, `frontend/src/features/entities/formSchema.cases.test.ts`, `postman/geoentity.postman_collection.json`, `.github/workflows/ci.yml`
+- **Jejak:** US-007, FR-7, NFR-3, OpenSpec `add-validation-coverage`, branch `feat/us-007-validation-coverage`
+- **Pengujian:** Kasus bersama lulus di Go dan Vitest, tanpa menemukan perbedaan aturan. 208 test Vitest, test Go, dan 31 test Playwright lulus. Koleksi lulus 54 dari 54 assertion lewat Newman dan Postman CLI terhadap build produksi lokal. **Belum terbukti:** koleksi terhadap nginx dan PostgreSQL 17 dengan PostGIS 3.7, yang menunggu CI.
+
+### US-006: Menghapus entitas
+
+- **Jenis:** Added
+- **Apa:** Tombol Hapus pada panel detail membuka dialog konfirmasi yang menyebut nama entitas. Setelah dihapus, marker hilang, panel tertutup, dan pesan sukses muncul. API `DELETE /api/v1/entities/{id}` membalas 200 dengan `data` null.
+- **Bagaimana:** Kegagalan tampil pada dialog dan marker tetap ada. Bila entitas sudah dihapus pihak lain, panel tertutup dan pengguna diberi tahu. `Esc` hanya menutup dialog, bukan panel di belakangnya. Test E2E kini menghapus data ujinya lewat API.
+- **File utama:** `backend/internal/store/entity_store.go`, `backend/internal/httpapi/entity_handler.go`, `frontend/src/features/entities/components/DeleteEntityDialog.tsx`, `frontend/src/features/entities/usePanel.ts`, `frontend/e2e/map.spec.ts`
+- **Jejak:** US-006, FR-6, OpenSpec `add-entity-delete`, branch `feat/us-006-entity-delete`
+- **Pengujian:** Test Go termasuk integrasi pada PostgreSQL 18 dengan PostGIS 3.6, 157 test Vitest, dan 31 test Playwright terhadap build produksi lulus, termasuk alur hapus dengan API sungguhan. Tidak ada baris `E2E ` yang tersisa setelah test. **Belum terbukti:** nginx dan PostgreSQL 17 dengan PostGIS 3.7 menunggu CI. Tampilan dialog belum diperiksa lewat screenshot.
+
+### US-005: Selesai
+
+- **Jenis:** Changed
+- **Apa:** US-005 selesai, dan change OpenSpec-nya diarsipkan.
+- **Bagaimana:** CI pada PR #7 lulus, lalu PR masuk lewat auto-merge.
+- **File utama:** `openspec/specs/entity-update/spec.md`, `openspec/changes/archive/2026-11-06-add-entity-update/`
+- **Jejak:** US-005, FazryJavier/LenSoftwareDevTest#7
+- **Pengujian:** Semua check CI pada PR #7 lulus.
+
 ### US-005: Mengubah entitas
 
 - **Jenis:** Added

@@ -15,6 +15,7 @@ type EntityStore interface {
 	Get(ctx context.Context, id string) (domain.Entity, error)
 	Create(ctx context.Context, input domain.EntityInput) (domain.Entity, error)
 	Update(ctx context.Context, id string, input domain.EntityInput) (domain.Entity, error)
+	Delete(ctx context.Context, id string) error
 }
 
 // Dependencies are the collaborators the HTTP layer needs.
@@ -33,6 +34,7 @@ func NewRouter(deps Dependencies) http.Handler {
 	mux.Handle("POST /api/v1/entities", createEntityHandler(deps.Entities, deps.Logger))
 	mux.Handle("GET /api/v1/entities/{id}", getEntityHandler(deps.Entities, deps.Logger))
 	mux.Handle("PUT /api/v1/entities/{id}", updateEntityHandler(deps.Entities, deps.Logger))
+	mux.Handle("DELETE /api/v1/entities/{id}", deleteEntityHandler(deps.Entities, deps.Logger))
 
 	return withMiddleware(withEnvelopeFallback(mux), deps)
 }

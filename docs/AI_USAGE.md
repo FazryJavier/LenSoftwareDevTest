@@ -38,7 +38,9 @@ Alur dan pembagian peran dijelaskan di [WORKFLOW](WORKFLOW.md#2-pembagian-peran)
 | 2026-11-06 | Aturan merge dan proteksi `main` | Menyiapkan auto-merge dan proteksi `main`; menahan PR dengan CI gagal | Memutuskan bahwa PR tidak perlu approval, menyetujui perubahan setting repository, dan menutup PR Dependabot yang tidak kompatibel atas saran Claude | Setting dibaca kembali dari GitHub |
 | 2026-11-06 | US-003 | Menulis proposal, kode, test, dan dokumen; memeriksa panel di browser | Menyetujui proposal | CI lulus, dan PR masuk lewat auto-merge |
 | 2026-11-06 | US-004 | Menulis proposal, kode, test, dan dokumen; memeriksa form di browser | Menyetujui proposal | CI lulus, dan PR masuk lewat auto-merge |
-| 2026-11-06 | US-005 | Menulis proposal, kode, test, dan dokumen; memeriksa mode ubah di browser | Menyetujui proposal | Lihat bagian Pengujian di CHANGELOG. CI menunggu |
+| 2026-11-06 | US-005 | Menulis proposal, kode, test, dan dokumen; memeriksa mode ubah di browser | Menyetujui proposal | CI lulus, dan PR masuk lewat auto-merge |
+| 2026-11-06 | US-006 | Menulis proposal, kode, test, dan dokumen | Menyetujui US-006 sampai US-008 sekaligus | Lihat bagian Pengujian di CHANGELOG |
+| 2026-11-06 | US-007 | Menulis proposal, kasus bersama, koleksi Postman, dan dokumen | Menyetujui US-006 sampai US-008 sekaligus | Lihat bagian Pengujian di CHANGELOG. CI menunggu |
 
 ## Temuan yang dipengaruhi AI
 

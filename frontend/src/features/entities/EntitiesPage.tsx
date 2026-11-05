@@ -45,6 +45,7 @@ export function EntitiesPage({ mapStyleUrl }: { mapStyleUrl: string }) {
   const [pickedPoint, setPickedPoint] = useState<MapPoint | null>(null);
   const [draftLocation, setDraftLocation] = useState<MapPoint | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const addButton = useRef<HTMLButtonElement>(null);
 
   const loaded = entities.data?.entities ?? [];
   const hasMoreThanLoaded = entities.data !== undefined && entities.data.total > loaded.length;
@@ -66,6 +67,7 @@ export function EntitiesPage({ mapStyleUrl }: { mapStyleUrl: string }) {
       <header className="flex items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3">
         <h1 className="text-lg font-semibold">GeoEntity Manager</h1>
         <Button
+          ref={addButton}
           variant="primary"
           disabled={panel.isFormOpen}
           onClick={(event) => {
@@ -127,8 +129,14 @@ export function EntitiesPage({ mapStyleUrl }: { mapStyleUrl: string }) {
           <EntityDetailPanel
             key={panel.selectedId}
             entityId={panel.selectedId}
-            onClose={panel.close}
+            onClose={() => {
+              panel.close();
+            }}
             onEdit={panel.openEdit}
+            onDeleted={(message) => {
+              setToast(message);
+              panel.close(addButton.current);
+            }}
           />
         )}
         {panel.isFormOpen && (

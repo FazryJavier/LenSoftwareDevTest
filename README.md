@@ -6,7 +6,7 @@ Aplikasi web untuk menampilkan dan mengelola entitas berlokasi geografis, sepert
 
 ## Status
 
-> Saat ini aplikasi dapat menampilkan entitas pada peta, membuka detailnya, serta menambah dan mengubahnya dengan validasi di frontend dan backend. **Hapus entitas belum dibuat.** Jalur Docker Compose terbukti di CI, tetapi belum dicoba di mesin pengembangan karena Docker Desktop gagal berjalan di sana.
+> Aplikasi dapat menampilkan entitas pada peta, membuka detailnya, serta menambah, mengubah, dan menghapusnya, dengan validasi di frontend dan backend. Jalur Docker Compose terbukti di CI, tetapi belum dicoba di mesin pengembangan karena Docker Desktop gagal berjalan di sana.
 
 | Fitur | User story | Status |
 |---|---|---|
@@ -14,9 +14,9 @@ Aplikasi web untuk menampilkan dan mengelola entitas berlokasi geografis, sepert
 | Menampilkan entitas pada peta | [US-002](docs/user_stories/US-002.md) | Selesai |
 | Melihat detail entitas | [US-003](docs/user_stories/US-003.md) | Selesai |
 | Menambah entitas | [US-004](docs/user_stories/US-004.md) | Selesai |
-| Mengubah entitas | [US-005](docs/user_stories/US-005.md) | Sedang dikerjakan |
-| Menghapus entitas | [US-006](docs/user_stories/US-006.md) | Belum mulai |
-| Validasi frontend dan backend | [US-007](docs/user_stories/US-007.md) | Sebagian: berlaku pada form tambah dan ubah |
+| Mengubah entitas | [US-005](docs/user_stories/US-005.md) | Selesai |
+| Menghapus entitas | [US-006](docs/user_stories/US-006.md) | Sedang dikerjakan |
+| Validasi frontend dan backend | [US-007](docs/user_stories/US-007.md) | Sedang dikerjakan |
 | Filter jenis dan status | [US-008](docs/user_stories/US-008.md) | Belum mulai |
 
 Batasan yang disengaja, seperti tidak adanya autentikasi, tercatat di [PRD §7](docs/PRD.md#7-di-luar-ruang-lingkup).

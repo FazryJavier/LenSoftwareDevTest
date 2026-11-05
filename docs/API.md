@@ -125,4 +125,12 @@ Pesan 500 dan 503 tidak boleh memuat SQL, stack trace, atau detail internal. Det
 npx --yes @redocly/cli@2.76.0 lint docs/openapi.yaml
 ```
 
-Koleksi Postman di `postman/` dibuat pada [US-007](user_stories/US-007.md) dan dijalankan terhadap server yang berjalan.
+Koleksi di `postman/` menguji alur CRUD dan semua jenis kegagalan terhadap server yang berjalan. CI menjalankannya pada aplikasi Compose lewat Newman. Di lokal, jalankan salah satu perintah berikut.
+
+```bash
+npx --yes newman@6.2.3 run postman/geoentity.postman_collection.json --env-var baseUrl=http://localhost:8080/api/v1
+```
+
+```bash
+postman collection run postman/geoentity.postman_collection.json --env-var baseUrl=http://localhost:8080/api/v1
+```

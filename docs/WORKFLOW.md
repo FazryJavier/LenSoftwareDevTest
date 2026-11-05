@@ -29,7 +29,7 @@ flowchart TD
 |---|---|---|
 | Kebutuhan | Menyusun draf dokumen | Menentukan arah dan menyetujui |
 | Keputusan teknis | Mengusulkan, mengecek kompatibilitas | Memutuskan |
-| Proposal OpenSpec | Menulis | **Menyetujui sebelum implementasi** |
+| Proposal OpenSpec | Menulis | **Menyetujui sebelum implementasi**; US-006 sampai US-008 disetujui sekaligus |
 | Kode dan test | Menulis dan menjalankan | Meninjau hasil |
 | Commit, push, dan PR | Menjalankan bila diminta | Meminta dan meninjau |
 | Merge | Mengaktifkan auto-merge pada PR | Dapat meninjau PR kapan saja; tanpa approval wajib |
@@ -73,7 +73,7 @@ Workflow [`ci.yml`](../.github/workflows/ci.yml) berjalan pada setiap Pull Reque
 | `secrets` | Gitleaks pada seluruh riwayat | Selalu |
 | `backend` | `gofmt`, `go vet`, golangci-lint, test dengan PostGIS, govulncheck, build | `backend/go.mod` ada |
 | `frontend` | Prettier, ESLint, typecheck, Vitest, build, `npm audit` | `frontend/package.json` ada |
-| `e2e` | Compose dan Playwright | `frontend/playwright.config.ts` ada |
+| `e2e` | Compose, Playwright, dan koleksi kontrak lewat Newman | `frontend/playwright.config.ts` ada |
 | `ci-success` | Menggabungkan hasil; job ini yang dijadikan required check | Selalu |
 
 Job backend, frontend, dan e2e dilewati selama kodenya belum ada, lalu aktif sendiri setelah US-001 tanpa perubahan workflow.

@@ -43,7 +43,7 @@ Satu user story dikerjakan dalam satu change OpenSpec dan satu branch.
 
 1. Buat branch `feat/us-XXX-<slug>` dari `main`.
 2. Jalankan `/opsx:propose <nama-change>` memakai nama change dari `docs/user_stories/README.md`.
-3. Tunggu persetujuan pemilik proyek atas proposal.
+3. Tunggu persetujuan pemilik proyek atas proposal. Pemilik proyek telah menyetujui US-006 sampai US-008 sekaligus pada 6 November 2026, sehingga proposal ketiganya tetap ditulis tanpa menunggu persetujuan terpisah.
 4. Jalankan `/opsx:apply`, lalu implementasikan beserta test.
 5. Jalankan pemeriksaan pada bagian [Perintah](#perintah), dan lakukan [tinjauan mandiri](#tinjauan-mandiri-sebelum-menyatakan-selesai).
 6. Jalankan `/opsx:verify`, lalu `/opsx:archive`.
@@ -80,6 +80,10 @@ npx --yes @fission-ai/openspec@1.16.0 validate --all --strict
 
 ```bash
 npx --yes @redocly/cli@2.76.0 lint docs/openapi.yaml
+```
+
+```bash
+npx --yes newman@6.2.3 run postman/geoentity.postman_collection.json --env-var baseUrl=http://localhost:8080/api/v1
 ```
 
 ## Struktur backend
@@ -226,7 +230,7 @@ File `.env` di root hanya dibaca oleh Docker Compose. `.env` tidak di-commit, da
 | Kontrak API | Lint OpenAPI, unit test Go, dan koleksi Postman |
 | Komponen atau hook | Vitest |
 | Alur pengguna | Vitest dan Playwright |
-| Aturan validasi | Test backend **dan** frontend memakai kasus yang sama |
+| Aturan validasi | Tambahkan kasus ke `testdata/validation-cases.json`, yang dijalankan test Go dan Vitest |
 
 **Backend**
 
