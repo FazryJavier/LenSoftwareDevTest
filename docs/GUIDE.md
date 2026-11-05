@@ -1,6 +1,6 @@
 # Guide
 
-> **Status:** baru bagian "Melihat entitas", "Melihat detail", "Menambah entitas", dan "Mengubah entitas" yang tersedia. Bagian lain pada §2 dan §3 menggambarkan perilaku yang direncanakan dan harus diperiksa kembali setelah fitur selesai. Status terbaru ada di [README](../README.md#status).
+> **Status:** bagian "Memfilter" belum tersedia. Bagian lain pada §2 dan §3 menggambarkan perilaku yang direncanakan dan harus diperiksa kembali setelah fitur selesai. Status terbaru ada di [README](../README.md#status).
 
 ## 1. Menjalankan aplikasi
 
@@ -106,7 +106,7 @@ $env:TEST_DATABASE_URL="postgres://geo:geo_local_only@localhost:5432/geoentity_t
 cd backend; go test ./...
 ```
 
-`npm run test:e2e` membutuhkan backend dan frontend yang sedang berjalan, serta browser dari `npx playwright install chromium`.
+`npm run test:e2e` membutuhkan backend dan frontend yang sedang berjalan, serta browser dari `npx playwright install chromium`. Test ini membuat data berawalan `E2E `, lalu menghapus semua entitas berawalan itu setelah selesai, jadi jangan memakai awalan tersebut untuk data sendiri.
 
 ## 2. Menggunakan aplikasi
 

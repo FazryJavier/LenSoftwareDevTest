@@ -43,7 +43,7 @@ Satu user story dikerjakan dalam satu change OpenSpec dan satu branch.
 
 1. Buat branch `feat/us-XXX-<slug>` dari `main`.
 2. Jalankan `/opsx:propose <nama-change>` memakai nama change dari `docs/user_stories/README.md`.
-3. Tunggu persetujuan pemilik proyek atas proposal.
+3. Tunggu persetujuan pemilik proyek atas proposal. Pemilik proyek telah menyetujui US-006 sampai US-008 sekaligus pada 6 November 2026, sehingga proposal ketiganya tetap ditulis tanpa menunggu persetujuan terpisah.
 4. Jalankan `/opsx:apply`, lalu implementasikan beserta test.
 5. Jalankan pemeriksaan pada bagian [Perintah](#perintah), dan lakukan [tinjauan mandiri](#tinjauan-mandiri-sebelum-menyatakan-selesai).
 6. Jalankan `/opsx:verify`, lalu `/opsx:archive`.

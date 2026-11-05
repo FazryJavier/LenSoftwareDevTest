@@ -89,6 +89,22 @@ func updateEntityHandler(entities EntityStore, logger *slog.Logger) http.Handler
 	})
 }
 
+func deleteEntityHandler(entities EntityStore, logger *slog.Logger) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id, ok := readEntityID(w, r)
+		if !ok {
+			return
+		}
+
+		if err := entities.Delete(r.Context(), id); err != nil {
+			writeStoreFailure(w, r, logger, "delete entity", err)
+			return
+		}
+
+		writeSuccess(w, http.StatusOK, "Entity deleted.", nil, nil)
+	})
+}
+
 func getEntityHandler(entities EntityStore, logger *slog.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id, ok := readEntityID(w, r)

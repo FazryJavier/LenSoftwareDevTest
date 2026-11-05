@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/FazryJavier/LenSoftwareDevTest/backend/internal/domain"
 )
@@ -13,6 +14,7 @@ import (
 // DBTX is satisfied by both a connection pool and a transaction, which lets integration
 // tests run every query inside a transaction that is rolled back.
 type DBTX interface {
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 }
@@ -105,6 +107,18 @@ func (s *EntityStore) Update(ctx context.Context, id string, input domain.Entity
 		return domain.Entity{}, fmt.Errorf("read updated entity: %w", err)
 	}
 	return entity, nil
+}
+
+// Delete removes an entity permanently, or returns domain.ErrNotFound when it does not exist.
+func (s *EntityStore) Delete(ctx context.Context, id string) error {
+	tag, err := s.db.Exec(ctx, "DELETE FROM entities WHERE id = $1::uuid", id)
+	if err != nil {
+		return fmt.Errorf("delete entity: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return domain.ErrNotFound
+	}
+	return nil
 }
 
 // Get returns one entity, or domain.ErrNotFound when it does not exist.

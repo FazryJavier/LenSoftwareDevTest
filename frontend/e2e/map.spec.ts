@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page, type Route } from '@playwright/test';
+import { z } from 'zod';
 
 const ENTITY = {
   id: '0b5f6c1e-3d1a-4c55-9d58-3f0a0a2c1e11',
@@ -32,6 +33,18 @@ async function stubBaseMap(page: Page) {
     route.fulfill({ json: { version: 8, sources: {}, layers: [] } }),
   );
 }
+
+const entityListSchema = z.object({
+  data: z.array(z.object({ id: z.string(), name: z.string() })),
+});
+
+// Test data is recognised by this prefix, so it can be removed without touching other rows.
+test.afterAll(async ({ request }) => {
+  const response = await request.get('/api/v1/entities?per_page=500');
+  const { data } = entityListSchema.parse(await response.json());
+  const testEntities = data.filter((entity) => entity.name.startsWith('E2E '));
+  await Promise.all(testEntities.map(({ id }) => request.delete(`/api/v1/entities/${id}`)));
+});
 
 let mapSetupErrors: string[] = [];
 
@@ -552,6 +565,116 @@ test.describe('changing an entity through the real API', () => {
     expect(await (await request.get(location)).json()).toMatchObject({
       data: { name: 'E2E Ubah API', latitude: 0 },
     });
+  });
+});
+
+test.describe('deleting an entity through the real API', () => {
+  async function createEntity(request: APIRequestContext, latitude: number, longitude: number) {
+    const name = `E2E Hapus ${String(Date.now())} ${String(longitude)}`;
+    const response = await request.post('/api/v1/entities', {
+      data: { name, type: 'facility', status: 'active', latitude, longitude },
+    });
+    expect(response.status()).toBe(201);
+    return { name, location: response.headers().location ?? '' };
+  }
+
+  async function openDialog(page: Page, name: string) {
+    await stubBaseMap(page);
+    await page.goto('/');
+    await page.getByRole('button', { name: new RegExp(name) }).click();
+    await page.getByRole('button', { name: 'Hapus', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Hapus entitas?' });
+    await expect(dialog).toContainText(name);
+    return dialog;
+  }
+
+  test('removes the entity, which stays gone after a reload', async ({ page, request }) => {
+    const { name, location } = await createEntity(request, 7, 105);
+    const dialog = await openDialog(page, name);
+
+    await dialog.getByRole('button', { name: 'Hapus', exact: true }).click();
+
+    await expect(page.getByText('Entitas berhasil dihapus.')).toBeVisible();
+    await expect(page.getByRole('complementary')).toBeHidden();
+    const marker = page.getByRole('button', { name: new RegExp(name) });
+    await expect(marker).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Tambah', exact: true })).toBeFocused();
+
+    await page.reload();
+    await page.locator('.maplibregl-canvas').waitFor();
+    await expect(marker).toBeHidden();
+    expect((await request.get(location)).status()).toBe(404);
+  });
+
+  test('keeps everything when cancelled, including with Escape', async ({ page, request }) => {
+    const { name, location } = await createEntity(request, 6, 103);
+    const dialog = await openDialog(page, name);
+
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    await expect(page.getByRole('complementary', { name: 'Detail entitas' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Hapus', exact: true }).click();
+    await dialog.getByRole('button', { name: 'Batal' }).click();
+    await expect(dialog).toBeHidden();
+
+    await expect(page.getByRole('button', { name: new RegExp(name) })).toBeVisible();
+    expect((await request.get(location)).status()).toBe(200);
+  });
+
+  test('shows a failure in the dialog and keeps the marker', async ({ page, request }) => {
+    const { name, location } = await createEntity(request, 4, 101);
+    await page.route(/\/api\/v1\/entities\/[^?]+$/, (route) =>
+      route.request().method() === 'DELETE'
+        ? route.fulfill({
+            status: 500,
+            json: {
+              code: 500,
+              success: false,
+              message: 'Internal server error.',
+              data: null,
+              errors: [{ field: null, code: 'internal_error', message: 'Internal server error.' }],
+              meta: null,
+            },
+          })
+        : route.continue(),
+    );
+    const dialog = await openDialog(page, name);
+
+    await dialog.getByRole('button', { name: 'Hapus', exact: true }).click();
+
+    await expect(dialog.getByRole('alert')).toContainText('gagal dihapus');
+    expect((await request.get(location)).status()).toBe(200);
+  });
+
+  test('says so when someone else already deleted it', async ({ page, request }) => {
+    const { name, location } = await createEntity(request, 2, 99);
+    const dialog = await openDialog(page, name);
+    expect((await request.delete(location)).status()).toBe(200);
+
+    await dialog.getByRole('button', { name: 'Hapus', exact: true }).click();
+
+    await expect(page.getByText('Entitas ini sudah tidak ada.')).toBeVisible();
+    await expect(page.getByRole('complementary')).toBeHidden();
+    await expect(page.getByRole('button', { name: new RegExp(name) })).toBeHidden();
+  });
+
+  test('the API answers 200, 400, and 404 for DELETE', async ({ request }) => {
+    const { location } = await createEntity(request, 8, 97);
+
+    const deleted = await request.delete(location);
+    expect(deleted.status()).toBe(200);
+    expect(await deleted.json()).toEqual({
+      code: 200,
+      success: true,
+      message: 'Entity deleted.',
+      data: null,
+      errors: null,
+      meta: null,
+    });
+
+    expect((await request.delete(location)).status()).toBe(404);
+    expect((await request.delete('/api/v1/entities/not-a-uuid')).status()).toBe(400);
   });
 });
 

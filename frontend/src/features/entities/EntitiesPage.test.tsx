@@ -504,6 +504,60 @@ describe('EntitiesPage', () => {
     });
   });
 
+  describe('deleting an entity', () => {
+    function respond(url: string, init: RequestInit | undefined, deleted: boolean) {
+      if (url.includes('/entities?')) {
+        return listResponse(deleted ? [] : [entity({})]);
+      }
+      return new Response(
+        JSON.stringify({
+          code: 200,
+          success: true,
+          message: 'OK.',
+          data: init?.method === 'DELETE' ? null : entity({}),
+          errors: null,
+          meta: null,
+        }),
+      );
+    }
+
+    async function openDialog() {
+      let deleted = false;
+      fetchStub.mockImplementation((url, init) => {
+        const response = respond(url, init, deleted);
+        deleted ||= init?.method === 'DELETE';
+        return Promise.resolve(response);
+      });
+      renderLoadedPage();
+      await userEvent.click(await screen.findByRole('button', { name: /Truk Logistik/ }));
+      await userEvent.click(await screen.findByRole('button', { name: 'Hapus' }));
+      return screen.getByRole('dialog');
+    }
+
+    it('removes the marker, closes the panel, announces it, and moves focus', async () => {
+      const dialog = await openDialog();
+
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Hapus' }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+      });
+      expect(screen.getByText('Entitas berhasil dihapus.')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.queryByRole('button', { name: /Truk Logistik/ })).not.toBeInTheDocument();
+      });
+      expect(screen.getByRole('button', { name: 'Tambah' })).toHaveFocus();
+    });
+
+    it('keeps the panel behind the dialog when Escape is pressed', async () => {
+      await openDialog();
+
+      await userEvent.keyboard('{Escape}');
+
+      expect(screen.getByRole('complementary', { name: 'Detail entitas' })).toBeInTheDocument();
+    });
+  });
+
   describe('selecting a marker', () => {
     const SECOND_ID = '0b5f6c1e-3d1a-4c55-9d58-3f0a0a2c1e12';
     const first = entity({});

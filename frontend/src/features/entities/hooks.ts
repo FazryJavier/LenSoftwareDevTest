@@ -1,5 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createEntity, getEntity, listEntities, updateEntity } from './api';
+import { ApiError } from '../../api/errors';
+import { createEntity, deleteEntity, getEntity, listEntities, updateEntity } from './api';
 import type { EntityPayload } from './formSchema';
 
 const entityKeys = {
@@ -25,6 +26,21 @@ export function useUpdateEntity() {
       updateEntity(id, payload),
     onSuccess: (saved) => {
       queryClient.setQueryData(entityKeys.detail(saved.id), saved);
+      return queryClient.invalidateQueries({ queryKey: entityKeys.lists });
+    },
+  });
+}
+
+/** Deletes an entity. A 404 means it is already gone, so the map is refreshed in that case too. */
+export function useDeleteEntity() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteEntity,
+    onSettled: (_data, error, id) => {
+      if (error !== null && !(error instanceof ApiError && error.status === 404)) {
+        return;
+      }
+      queryClient.removeQueries({ queryKey: entityKeys.detail(id) });
       return queryClient.invalidateQueries({ queryKey: entityKeys.lists });
     },
   });

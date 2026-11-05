@@ -45,6 +45,10 @@ export async function updateEntity(id: string, payload: EntityPayload): Promise<
   return parsed.data;
 }
 
+export async function deleteEntity(id: string): Promise<void> {
+  await apiRequest(`/entities/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
 export async function getEntity(id: string, signal?: AbortSignal): Promise<Entity> {
   const response = await apiRequest(`/entities/${encodeURIComponent(id)}`, { signal });
 

@@ -1,19 +1,26 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ApiError } from '../../../api/errors';
 import { Button } from '../../../components/ui/Button';
 import { ENTITY_STATUSES, ENTITY_TYPES } from '../constants';
 import { formatCoordinates, formatDateTime } from '../format';
 import { useEntity } from '../hooks';
 import type { Entity } from '../schema';
+import { DeleteEntityDialog } from './DeleteEntityDialog';
 import { Panel } from './Panel';
 
 interface EntityDetailPanelProps {
   entityId: string;
   onClose: () => void;
   onEdit: (entity: Entity) => void;
+  onDeleted: (message: string) => void;
 }
 
-export function EntityDetailPanel({ entityId, onClose, onEdit }: EntityDetailPanelProps) {
+export function EntityDetailPanel({
+  entityId,
+  onClose,
+  onEdit,
+  onDeleted,
+}: EntityDetailPanelProps) {
   const entity = useEntity(entityId);
   const closeButton = useRef<HTMLButtonElement>(null);
 
@@ -54,12 +61,23 @@ export function EntityDetailPanel({ entityId, onClose, onEdit }: EntityDetailPan
           </button>
         </div>
       )}
-      {entity.data !== undefined && <EntityDetails entity={entity.data} onEdit={onEdit} />}
+      {entity.data !== undefined && (
+        <EntityDetails entity={entity.data} onEdit={onEdit} onDeleted={onDeleted} />
+      )}
     </Panel>
   );
 }
 
-function EntityDetails({ entity, onEdit }: { entity: Entity; onEdit: (entity: Entity) => void }) {
+function EntityDetails({
+  entity,
+  onEdit,
+  onDeleted,
+}: {
+  entity: Entity;
+  onEdit: (entity: Entity) => void;
+  onDeleted: (message: string) => void;
+}) {
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const type = ENTITY_TYPES[entity.type];
   const status = ENTITY_STATUSES[entity.status];
   const attributes = Object.entries(entity.attributes);
@@ -94,7 +112,7 @@ function EntityDetails({ entity, onEdit }: { entity: Entity; onEdit: (entity: En
       </Detail>
       <Detail label="Dibuat">{formatDateTime(entity.created_at)}</Detail>
       <Detail label="Diperbarui">{formatDateTime(entity.updated_at)}</Detail>
-      <div>
+      <div className="flex justify-between gap-2">
         <Button
           onClick={() => {
             onEdit(entity);
@@ -102,7 +120,24 @@ function EntityDetails({ entity, onEdit }: { entity: Entity; onEdit: (entity: En
         >
           Ubah
         </Button>
+        <Button
+          variant="danger"
+          onClick={() => {
+            setIsConfirmingDelete(true);
+          }}
+        >
+          Hapus
+        </Button>
       </div>
+      {isConfirmingDelete && (
+        <DeleteEntityDialog
+          entity={entity}
+          onDismiss={() => {
+            setIsConfirmingDelete(false);
+          }}
+          onDeleted={onDeleted}
+        />
+      )}
     </div>
   );
 }

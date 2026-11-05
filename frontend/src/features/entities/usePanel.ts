@@ -47,7 +47,11 @@ export function usePanel() {
     setMode({ kind: 'detail', id });
   }, []);
 
-  const close = useCallback(() => {
+  /** Pass a focus target when the element that opened the panel no longer exists. */
+  const close = useCallback((focusTarget?: HTMLElement | null) => {
+    if (focusTarget !== undefined) {
+      trigger.current = focusTarget;
+    }
     setMode({ kind: 'idle' });
   }, []);
 
@@ -67,7 +71,8 @@ export function usePanel() {
     }
     // On the document, because focus may be on the map or a marker rather than the panel.
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      // An open dialog handles its own Escape key, and the panel behind it stays open.
+      if (event.key === 'Escape' && document.querySelector('dialog[open]') === null) {
         close();
       }
     };
