@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
@@ -15,7 +16,8 @@ const (
 	codeUnsupportedMedia = "unsupported_media_type"
 	codePayloadTooLarge  = "payload_too_large"
 
-	maxBodyBytes = 64 << 10
+	maxBodyBytes  = 64 << 10
+	maxDrainBytes = 1 << 20
 )
 
 // decodeFailure is why a request body could not be read. These bodies never reach the
@@ -27,7 +29,7 @@ type decodeFailure struct {
 }
 
 // decodeJSONBody reads exactly one JSON object from a request of limited size.
-func decodeJSONBody(w http.ResponseWriter, r *http.Request, target any) *decodeFailure {
+func decodeJSONBody(r *http.Request, target any) *decodeFailure {
 	mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil || mediaType != "application/json" {
 		return &decodeFailure{
@@ -37,7 +39,22 @@ func decodeJSONBody(w http.ResponseWriter, r *http.Request, target any) *decodeF
 		}
 	}
 
-	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxBodyBytes))
+	body, err := io.ReadAll(io.LimitReader(r.Body, maxBodyBytes+1))
+	if err != nil {
+		return classifyDecodeError(err)
+	}
+	if len(body) > maxBodyBytes {
+		// Answering with the rest unread made the Vite proxy report ECONNRESET and a 502 in
+		// place of this 413. The read is bounded, and a failure only means the client is gone.
+		_, _ = io.CopyN(io.Discard, r.Body, maxDrainBytes)
+		return &decodeFailure{
+			status:  http.StatusRequestEntityTooLarge,
+			message: "Request body is too large.",
+			item:    generalError(codePayloadTooLarge, "Request body must be at most 64 KiB."),
+		}
+	}
+
+	decoder := json.NewDecoder(bytes.NewReader(body))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(target); err != nil {
 		return classifyDecodeError(err)
@@ -50,14 +67,6 @@ func decodeJSONBody(w http.ResponseWriter, r *http.Request, target any) *decodeF
 }
 
 func classifyDecodeError(err error) *decodeFailure {
-	var tooLarge *http.MaxBytesError
-	if errors.As(err, &tooLarge) {
-		return &decodeFailure{
-			status:  http.StatusRequestEntityTooLarge,
-			message: "Request body is too large.",
-			item:    generalError(codePayloadTooLarge, "Request body must be at most 64 KiB."),
-		}
-	}
 	// A nil error here means a second, valid value followed the object. encoding/json has no
 	// error type for an unknown field, so its message is the only signal for that case.
 	if err != nil {

@@ -4,6 +4,33 @@ Semua perubahan pada proyek ini dicatat di sini, dengan entri terbaru di atas, a
 
 ## 2026-11-06
 
+### US-008: Filter jenis dan status
+
+- **Jenis:** Added
+- **Apa:** Peta dapat difilter menurut jenis dan status. Filter tersimpan pada URL, sehingga tetap berlaku saat dimuat ulang dan dibagikan, dan **Reset** mengembalikan semua entitas pada area. API menerima `type` dan `status` berisi satu atau beberapa nilai, serta membalas 400 untuk nilai tidak dikenal.
+- **Bagaimana:** Nilai dalam satu filter bersifat ATAU, sedangkan antarfilter dan dengan `bbox` bersifat DAN. Kondisi disusun dengan parameter `type = ANY($n)`. Nilai tidak dikenal pada URL diabaikan oleh frontend. Pesan kosong membedakan area tanpa entitas dengan filter tanpa hasil.
+- **File utama:** `backend/internal/httpapi/decode.go`, `backend/internal/store/entity_store.go`, `frontend/src/features/entities/useEntityFilters.ts`, `frontend/src/features/entities/components/EntityFilters.tsx`, `postman/geoentity.postman_collection.json`
+- **Jejak:** US-008, FR-8, OpenSpec `add-entity-filters`, branch `feat/us-008-entity-filters`
+- **Pengujian:** Test Go termasuk integrasi pada PostgreSQL 18 dengan PostGIS 3.6, 223 test Vitest, dan 34 test Playwright terhadap build produksi lulus. Koleksi Postman lulus 63 dari 63 assertion. Filter diperiksa di Edge pada ukuran desktop dan ponsel tanpa error console. CI belum berjalan saat entri ini ditulis.
+
+### Respons 413 lewat proxy
+
+- **Jenis:** Fixed
+- **Apa:** Body lebih dari 64 KiB kini mendapat 413 sesuai kontrak saat melewati proxy Vite. Sebelumnya, sebagian permintaan berakhir 502 tanpa envelope.
+- **Bagaimana:** Backend menjawab sebelum proxy selesai mengirim, sehingga proxy mendapat `ECONNRESET`. Mengganti `http.MaxBytesReader` dengan `io.LimitReader` saja tidak menyelesaikannya. Sisa body kini dibaca dan dibuang sampai 1 MiB sebelum menjawab. Di atas batas itu, backend tetap berhenti membaca, sehingga body sangat besar lewat proxy Vite masih dapat berakhir 502.
+- **File utama:** `backend/internal/httpapi/decode_body.go`, `backend/internal/httpapi/decode_body_test.go`
+- **Jejak:** Ditemukan saat menjalankan koleksi Postman berulang pada US-008
+- **Pengujian:** Lewat `vite preview`: 60 dari 60 menjawab 413 pada 70 KB dan 300 KB, serta 20 dari 20 pada 900 KB. Pada 2 MB dan 8 MB, tidak ada yang menjawab 413. Newman 40 iterasi lulus 2520 dari 2520 assertion. Perilaku lewat nginx untuk ukuran ini belum diukur berulang, dan batas bawaan nginx 1 MiB belum diperiksa.
+
+### US-006 dan US-007: Selesai
+
+- **Jenis:** Changed
+- **Apa:** US-006 dan US-007 selesai, dan change OpenSpec-nya diarsipkan.
+- **Bagaimana:** CI pada PR #8 dan PR #9 lulus, lalu keduanya masuk lewat auto-merge.
+- **File utama:** `openspec/specs/`, `openspec/changes/archive/`
+- **Jejak:** US-006, US-007, FazryJavier/LenSoftwareDevTest#8, FazryJavier/LenSoftwareDevTest#9
+- **Pengujian:** `CI success` wajib lulus sebelum merge pada kedua PR.
+
 ### US-007: Validasi lintas layer
 
 - **Jenis:** Added

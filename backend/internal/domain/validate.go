@@ -35,6 +35,16 @@ var (
 	entityStatuses      = []string{"active", "inactive", "maintenance"}
 )
 
+// IsEntityType reports whether the value is a known entity type.
+func IsEntityType(value string) bool {
+	return slices.Contains(entityTypes, value)
+}
+
+// IsEntityStatus reports whether the value is a known entity status.
+func IsEntityStatus(value string) bool {
+	return slices.Contains(entityStatuses, value)
+}
+
 // Violation is one broken rule. Field is the JSON path of the offending value.
 type Violation struct {
 	Field   string

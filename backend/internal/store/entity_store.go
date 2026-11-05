@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -25,7 +26,7 @@ const (
 
 	// The geometry cast matches the expression index. It also gives the rectangle the
 	// longitude/latitude meaning a map viewport has, including at world scale.
-	boundingBoxCondition = ` WHERE ST_Intersects(location::geometry, ST_MakeEnvelope($1, $2, $3, $4, 4326))`
+	boundingBoxCondition = "ST_Intersects(location::geometry, ST_MakeEnvelope($%d, $%d, $%d, $%d, 4326))"
 )
 
 // EntityStore reads and writes entities.
@@ -40,12 +41,7 @@ func NewEntityStore(db DBTX) *EntityStore {
 
 // List returns one page of entities, newest first.
 func (s *EntityStore) List(ctx context.Context, filter domain.ListFilter) (domain.EntityPage, error) {
-	where := ""
-	var args []any
-	if box := filter.BoundingBox; box != nil {
-		where = boundingBoxCondition
-		args = []any{box.MinLongitude, box.MinLatitude, box.MaxLongitude, box.MaxLatitude}
-	}
+	where, args := listConditions(filter)
 
 	var total int
 	if err := s.db.QueryRow(ctx, "SELECT count(*) FROM entities"+where, args...).Scan(&total); err != nil {
@@ -135,6 +131,30 @@ func (s *EntityStore) Get(ctx context.Context, id string) (domain.Entity, error)
 		return domain.Entity{}, fmt.Errorf("read entity: %w", err)
 	}
 	return entity, nil
+}
+
+// listConditions builds the WHERE clause. Its text comes only from constants, and every
+// value is passed as a parameter.
+func listConditions(filter domain.ListFilter) (string, []any) {
+	var conditions []string
+	var args []any
+	if box := filter.BoundingBox; box != nil {
+		next := len(args) + 1
+		conditions = append(conditions, fmt.Sprintf(boundingBoxCondition, next, next+1, next+2, next+3))
+		args = append(args, box.MinLongitude, box.MinLatitude, box.MaxLongitude, box.MaxLatitude)
+	}
+	if len(filter.Types) > 0 {
+		args = append(args, filter.Types)
+		conditions = append(conditions, fmt.Sprintf("type = ANY($%d)", len(args)))
+	}
+	if len(filter.Statuses) > 0 {
+		args = append(args, filter.Statuses)
+		conditions = append(conditions, fmt.Sprintf("status = ANY($%d)", len(args)))
+	}
+	if len(conditions) == 0 {
+		return "", nil
+	}
+	return " WHERE " + strings.Join(conditions, " AND "), args
 }
 
 func scanEntity(row pgx.CollectableRow) (domain.Entity, error) {

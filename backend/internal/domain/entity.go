@@ -34,6 +34,8 @@ type BoundingBox struct {
 // ListFilter selects a page of entities. A nil BoundingBox means everywhere.
 type ListFilter struct {
 	BoundingBox *BoundingBox
+	Types       []string // Empty means every type.
+	Statuses    []string // Empty means every status.
 	Page        int
 	PerPage     int
 }

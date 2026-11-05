@@ -3,6 +3,7 @@ import { apiRequest } from '../../api/client';
 import { ApiError } from '../../api/errors';
 import type { EntityPayload } from './formSchema';
 import { entitySchema, paginationMetaSchema, type Entity } from './schema';
+import type { EntityFilters } from './useEntityFilters';
 
 /** The API's maximum page size. The map asks users to zoom in beyond this many entities. */
 const ENTITIES_PER_VIEW = 500;
@@ -59,8 +60,18 @@ export async function getEntity(id: string, signal?: AbortSignal): Promise<Entit
   return parsed.data;
 }
 
-export async function listEntities(bbox: string, signal?: AbortSignal): Promise<EntityList> {
+export async function listEntities(
+  bbox: string,
+  filters: EntityFilters,
+  signal?: AbortSignal,
+): Promise<EntityList> {
   const query = new URLSearchParams({ bbox, per_page: String(ENTITIES_PER_VIEW) });
+  if (filters.type !== null) {
+    query.set('type', filters.type);
+  }
+  if (filters.status !== null) {
+    query.set('status', filters.status);
+  }
   const response = await apiRequest(`/entities?${query.toString()}`, { signal });
 
   const parsed = entityListSchema.safeParse(response);

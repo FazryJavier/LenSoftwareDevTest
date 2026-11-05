@@ -2,10 +2,12 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { ApiError } from '../../api/errors';
 import { createEntity, deleteEntity, getEntity, listEntities, updateEntity } from './api';
 import type { EntityPayload } from './formSchema';
+import type { EntityFilters } from './useEntityFilters';
 
 const entityKeys = {
   lists: ['entities', 'list'] as const,
-  list: (bbox: string | null) => [...entityKeys.lists, bbox] as const,
+  list: (bbox: string | null, filters: EntityFilters) =>
+    [...entityKeys.lists, bbox, filters] as const,
   detail: (id: string) => ['entities', 'detail', id] as const,
 };
 
@@ -59,14 +61,14 @@ export function useEntity(id: string) {
  * Loads the entities inside an area. Earlier markers stay visible while a new area loads,
  * and the area in the key keeps a late response from replacing a newer one.
  */
-export function useEntities(bbox: string | null) {
+export function useEntities(bbox: string | null, filters: EntityFilters) {
   return useQuery({
-    queryKey: entityKeys.list(bbox),
+    queryKey: entityKeys.list(bbox, filters),
     queryFn: ({ signal }) => {
       if (bbox === null) {
         throw new Error('useEntities ran without an area.');
       }
-      return listEntities(bbox, signal);
+      return listEntities(bbox, filters, signal);
     },
     enabled: bbox !== null,
     placeholderData: keepPreviousData,

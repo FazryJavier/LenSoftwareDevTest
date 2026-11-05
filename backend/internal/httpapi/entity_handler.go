@@ -11,7 +11,7 @@ import (
 // readEntityInput writes the error response itself and reports false when the body is unusable.
 func readEntityInput(w http.ResponseWriter, r *http.Request) (domain.EntityInput, bool) {
 	var request entityRequest
-	if failure := decodeJSONBody(w, r, &request); failure != nil {
+	if failure := decodeJSONBody(r, &request); failure != nil {
 		writeError(w, failure.status, failure.message, failure.item)
 		return domain.EntityInput{}, false
 	}

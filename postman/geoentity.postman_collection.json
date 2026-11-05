@@ -103,6 +103,39 @@
       ] } }]
     },
     {
+      "name": "List with matching filters",
+      "request": { "method": "GET", "url": "{{baseUrl}}/entities?type=vehicle,other&status=active&bbox=107,-7,108,-6" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('includes the entity', function () {",
+        "  pm.response.to.have.status(200);",
+        "  const ids = pm.response.json().data.map(function (entity) { return entity.id; });",
+        "  pm.expect(ids).to.include(pm.collectionVariables.get('entityId'));",
+        "});"
+      ] } }]
+    },
+    {
+      "name": "List with other filters",
+      "request": { "method": "GET", "url": "{{baseUrl}}/entities?status=inactive&bbox=107,-7,108,-6" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('does not include the entity', function () {",
+        "  pm.response.to.have.status(200);",
+        "  const ids = pm.response.json().data.map(function (entity) { return entity.id; });",
+        "  pm.expect(ids).to.not.include(pm.collectionVariables.get('entityId'));",
+        "});"
+      ] } }]
+    },
+    {
+      "name": "Reject unknown filters",
+      "request": { "method": "GET", "url": "{{baseUrl}}/entities?type=spaceship&status=lost" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('answers 400 naming each parameter', function () {",
+        "  pm.response.to.have.status(400);",
+        "  const fields = pm.response.json().errors.map(function (item) { return item.field; });",
+        "  pm.expect(fields).to.have.members(['type', 'status']);",
+        "});"
+      ] } }]
+    },
+    {
       "name": "Update entity",
       "request": {
         "method": "PUT",

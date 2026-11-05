@@ -37,12 +37,24 @@ describe('listEntities', () => {
   it('requests the area with the maximum page size and returns the entities', async () => {
     const fetchStub = stubList([ENTITY], META);
 
-    const result = await listEntities('106,-7,108,-6');
+    const result = await listEntities('106,-7,108,-6', { type: null, status: null });
 
     expect(result).toEqual({ entities: [ENTITY], total: 1 });
     const params = new URL(fetchStub.mock.calls[0]?.[0] ?? '', 'http://localhost').searchParams;
     expect(params.get('bbox')).toBe('106,-7,108,-6');
     expect(params.get('per_page')).toBe('500');
+    expect(params.has('type')).toBe(false);
+    expect(params.has('status')).toBe(false);
+  });
+
+  it('adds the active filters to the request', async () => {
+    const fetchStub = stubList([ENTITY], META);
+
+    await listEntities('106,-7,108,-6', { type: 'vehicle', status: 'maintenance' });
+
+    const params = new URL(fetchStub.mock.calls[0]?.[0] ?? '', 'http://localhost').searchParams;
+    expect(params.get('type')).toBe('vehicle');
+    expect(params.get('status')).toBe('maintenance');
   });
 
   it.each([
@@ -55,6 +67,8 @@ describe('listEntities', () => {
   ])('rejects a response with %s', async (_label, data, meta) => {
     stubList(data, meta);
 
-    await expect(listEntities('106,-7,108,-6')).rejects.toBeInstanceOf(ApiError);
+    await expect(
+      listEntities('106,-7,108,-6', { type: null, status: null }),
+    ).rejects.toBeInstanceOf(ApiError);
   });
 });

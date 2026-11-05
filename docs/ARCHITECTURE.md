@@ -83,7 +83,7 @@ flowchart LR
 
 - Decoder JSON memakai `DisallowUnknownFields`.
 - Field input didekode tanpa tipe, lalu divalidasi di `domain`. Nilai kosong dapat dibedakan dari `0`, dan semua pelanggaran dilaporkan sekaligus.
-- Body dibatasi 64 KiB dengan `http.MaxBytesReader`.
+- Body dibatasi 64 KiB. Sisa body yang terlalu besar dibaca dan dibuang sampai 1 MiB sebelum menjawab 413, karena menjawab dengan body yang belum terbaca membuat proxy Vite melaporkan 502. Body di atas sekitar 1,1 MiB lewat proxy Vite tetap dapat berakhir 502 atau koneksi terputus, dan backend tidak membacanya lebih jauh.
 - Server memakai timeout baca dan tulis serta graceful shutdown pada `SIGINT` dan `SIGTERM`.
 - Migrasi dijalankan saat server start.
 
