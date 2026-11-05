@@ -37,6 +37,8 @@ vi.mock('@vis.gl/react-maplibre', () => ({
   NavigationControl: () => null,
 }));
 
+vi.mock('maplibre-gl', () => ({ setWorkerUrl: vi.fn() }));
+
 function mapProps(): FakeMapProps {
   if (fakeMap.props === undefined) {
     throw new Error('The map has not been rendered yet.');

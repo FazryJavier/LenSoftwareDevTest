@@ -1,8 +1,14 @@
 import { Map, NavigationControl } from '@vis.gl/react-maplibre';
+import { setWorkerUrl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import type { MapBounds } from '../bbox';
 import type { Entity } from '../schema';
 import { EntityMarker } from './EntityMarker';
+
+// The bundler cannot see MapLibre's own reference to its worker, so a build would otherwise
+// ship without the file and the base map would stay empty while markers still render.
+setWorkerUrl(workerUrl);
 
 // Bounds rather than a fixed zoom, so the whole country fits on any screen size.
 const INDONESIA_VIEW = {

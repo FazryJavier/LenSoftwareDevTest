@@ -76,6 +76,7 @@ Versi terkunci saat ini: `pgx` v5.12.0, `goose` v3.29.0, dan versi frontend pada
 | `@vis.gl/react-maplibre` 8 membutuhkan `maplibre-gl >=4` | Sesuai dengan MapLibre 6 |
 | `@testing-library/react` 16 mendukung React `^19` | Sesuai |
 | Pre-bundling Vite memisahkan `maplibre-gl` 6 dari file worker-nya | `optimizeDeps.exclude` pada `vite.config.ts` |
+| Build produksi tidak menyertakan worker `maplibre-gl` 6 | Impor `?worker&url` dengan `setWorkerUrl` pada `EntityMap.tsx`, dan `worker.format: 'es'` |
 | Tag `postgis/postgis:17-3.7` tersedia di Docker Hub, hanya untuk `linux/amd64` | Dipakai untuk Compose dan CI; Compose menyetel `platform: linux/amd64` agar berjalan lewat emulasi di mesin ARM |
 | `tiles.openfreemap.org/styles/liberty` membalas HTTP 200 | Dipakai sebagai style default |
 

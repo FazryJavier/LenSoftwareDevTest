@@ -44,6 +44,8 @@ US-001 sudah menyediakan server, envelope, migrasi tabel `entities`, klien API, 
 
 **13. `optimizeDeps.exclude` untuk `maplibre-gl`.** Pre-bundling Vite memindahkan MapLibre tanpa file worker-nya, sehingga peta dasar kosong pada dev server. Marker tetap tampil, sehingga masalah ini tidak terlihat oleh test marker saja. Test E2E kini gagal bila worker tidak termuat.
 
+Build produksi membutuhkan langkah terpisah: bundler tidak dapat melihat rujukan MapLibre ke worker-nya, sehingga file itu tidak ikut ke `dist/`. Worker dibundel lewat impor `?worker&url` dan didaftarkan dengan `setWorkerUrl`, dengan `worker.format: 'es'`. Kegagalan ini tertangkap oleh job `e2e` di CI, bukan oleh pemeriksaan lokal yang saat itu hanya berjalan pada dev server. Jadi perubahan pada pemuatan peta perlu diuji juga pada build produksi.
+
 **14. `API_PROXY_TARGET` pada dev server.** Target proxy Vite dapat diganti, agar frontend tetap dapat dipakai bila backend berjalan di port lain.
 
 ## Risks / Trade-offs
