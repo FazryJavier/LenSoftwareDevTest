@@ -73,7 +73,7 @@ Workflow [`ci.yml`](../.github/workflows/ci.yml) berjalan pada setiap Pull Reque
 | `secrets` | Gitleaks pada seluruh riwayat | Selalu |
 | `backend` | `gofmt`, `go vet`, golangci-lint, test dengan PostGIS, govulncheck, build | `backend/go.mod` ada |
 | `frontend` | Prettier, ESLint, typecheck, Vitest, build, `npm audit` | `frontend/package.json` ada |
-| `e2e` | Compose dan Playwright | `frontend/playwright.config.ts` ada |
+| `e2e` | Compose, Playwright, dan koleksi kontrak lewat Newman | `frontend/playwright.config.ts` ada |
 | `ci-success` | Menggabungkan hasil; job ini yang dijadikan required check | Selalu |
 
 Job backend, frontend, dan e2e dilewati selama kodenya belum ada, lalu aktif sendiri setelah US-001 tanpa perubahan workflow.

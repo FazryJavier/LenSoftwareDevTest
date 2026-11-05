@@ -82,6 +82,10 @@ npx --yes @fission-ai/openspec@1.16.0 validate --all --strict
 npx --yes @redocly/cli@2.76.0 lint docs/openapi.yaml
 ```
 
+```bash
+npx --yes newman@6.2.3 run postman/geoentity.postman_collection.json --env-var baseUrl=http://localhost:8080/api/v1
+```
+
 ## Struktur backend
 
 ```text
@@ -226,7 +230,7 @@ File `.env` di root hanya dibaca oleh Docker Compose. `.env` tidak di-commit, da
 | Kontrak API | Lint OpenAPI, unit test Go, dan koleksi Postman |
 | Komponen atau hook | Vitest |
 | Alur pengguna | Vitest dan Playwright |
-| Aturan validasi | Test backend **dan** frontend memakai kasus yang sama |
+| Aturan validasi | Tambahkan kasus ke `testdata/validation-cases.json`, yang dijalankan test Go dan Vitest |
 
 **Backend**
 

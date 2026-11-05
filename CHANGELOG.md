@@ -4,6 +4,15 @@ Semua perubahan pada proyek ini dicatat di sini, dengan entri terbaru di atas, a
 
 ## 2026-11-06
 
+### US-007: Validasi lintas layer
+
+- **Jenis:** Added
+- **Apa:** Aturan validasi frontend dan backend kini dibuktikan sama lewat satu daftar kasus, dan kontrak API diuji terhadap server yang berjalan. Tidak ada perilaku aplikasi yang berubah.
+- **Bagaimana:** `testdata/validation-cases.json` berisi kasus per baris PRD §5, dan dijalankan oleh test Go serta Vitest. Koleksi Postman menguji alur CRUD serta 400, 404, 405, 413, 415, dan 422, termasuk bentuk envelope pada setiap respons. CI menjalankan koleksi itu terhadap Compose.
+- **File utama:** `testdata/validation-cases.json`, `backend/internal/domain/validate_cases_test.go`, `frontend/src/features/entities/formSchema.cases.test.ts`, `postman/geoentity.postman_collection.json`, `.github/workflows/ci.yml`
+- **Jejak:** US-007, FR-7, NFR-3, OpenSpec `add-validation-coverage`, branch `feat/us-007-validation-coverage`
+- **Pengujian:** Kasus bersama lulus di Go dan Vitest, tanpa menemukan perbedaan aturan. 208 test Vitest, test Go, dan 31 test Playwright lulus. Koleksi lulus 54 dari 54 assertion lewat Newman dan Postman CLI terhadap build produksi lokal. **Belum terbukti:** koleksi terhadap nginx dan PostgreSQL 17 dengan PostGIS 3.7, yang menunggu CI.
+
 ### US-006: Menghapus entitas
 
 - **Jenis:** Added

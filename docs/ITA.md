@@ -59,7 +59,7 @@ Versi dicek pada 5 November 2026. Nilai akhir dikunci oleh `package-lock.json` d
 | CI dan autofix | GitHub Actions | Terintegrasi dengan repository |
 | Lint Go | golangci-lint v2 | Menggabungkan banyak linter |
 | Keamanan | govulncheck, `npm audit`, gitleaks | Cek kerentanan dependensi dan kebocoran secret |
-| Kontrak API | OpenAPI 3.1, Redocly CLI, Postman CLI | Lint spesifikasi dan uji kontrak |
+| Kontrak API | OpenAPI 3.1, Redocly CLI, koleksi Postman v2.1 | Lint spesifikasi dan uji kontrak. Koleksi dijalankan Newman 6 di CI, dan dapat dijalankan Postman CLI di lokal |
 
 ## 3. Hasil cek kompatibilitas
 
