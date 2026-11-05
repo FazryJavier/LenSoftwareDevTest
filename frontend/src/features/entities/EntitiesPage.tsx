@@ -1,9 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Banner } from '../../components/ui/Banner';
+import { Button } from '../../components/ui/Button';
+import { Toast } from '../../components/ui/Toast';
 import { toBbox, type MapBounds } from './bbox';
 import { EntityDetailPanel } from './components/EntityDetailPanel';
+import { EntityForm } from './components/EntityForm';
+import type { MapPoint } from './formSchema';
 import { useEntities } from './hooks';
 import { EntityMap } from './map/EntityMap';
+import type { Entity } from './schema';
+import { usePanel } from './usePanel';
 
 const VIEW_CHANGE_DEBOUNCE_MS = 300;
 
@@ -32,59 +38,51 @@ function useMapArea() {
   };
 }
 
-function useEntitySelection() {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const trigger = useRef<HTMLElement | null>(null);
-
-  const select = useCallback((id: string, element: HTMLElement) => {
-    trigger.current = element;
-    setSelectedId(id);
-  }, []);
-
-  const close = useCallback(() => {
-    setSelectedId(null);
-    trigger.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    if (selectedId === null) {
-      return;
-    }
-    // On the document, because focus may be on the map or a marker rather than the panel.
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        close();
-      }
-    };
-    document.addEventListener('keydown', closeOnEscape);
-    return () => {
-      document.removeEventListener('keydown', closeOnEscape);
-    };
-  }, [selectedId, close]);
-
-  return { selectedId, select, close };
-}
-
 export function EntitiesPage({ mapStyleUrl }: { mapStyleUrl: string }) {
   const area = useMapArea();
   const entities = useEntities(area.bbox);
-  const selection = useEntitySelection();
+  const panel = usePanel();
+  const [pickedPoint, setPickedPoint] = useState<MapPoint | null>(null);
+  const [draftLocation, setDraftLocation] = useState<MapPoint | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   const loaded = entities.data?.entities ?? [];
   const hasMoreThanLoaded = entities.data !== undefined && entities.data.total > loaded.length;
   const isEmpty = entities.isSuccess && !entities.isPlaceholderData && loaded.length === 0;
 
+  const leaveCreate = () => {
+    setPickedPoint(null);
+    setDraftLocation(null);
+  };
+
+  const handleCreated = (entity: Entity) => {
+    leaveCreate();
+    panel.showDetail(entity.id);
+    setToast('Entitas berhasil ditambahkan.');
+  };
+
   return (
     <div className="flex h-screen flex-col">
-      <header className="border-b border-border bg-surface px-4 py-3">
+      <header className="flex items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3">
         <h1 className="text-lg font-semibold">GeoEntity Manager</h1>
+        <Button
+          variant="primary"
+          disabled={panel.isCreating}
+          onClick={(event) => {
+            panel.openCreate(event.currentTarget);
+          }}
+        >
+          Tambah
+        </Button>
       </header>
       <main className="relative flex-1">
         <EntityMap
           styleUrl={mapStyleUrl}
           entities={loaded}
-          selectedId={selection.selectedId}
-          onSelect={selection.select}
+          selectedId={panel.selectedId}
+          onSelect={panel.selectEntity}
+          draftLocation={draftLocation}
+          onMapPick={panel.isCreating ? setPickedPoint : null}
           onViewReady={area.setNow}
           onViewChange={area.setDebounced}
         />
@@ -93,14 +91,9 @@ export function EntitiesPage({ mapStyleUrl }: { mapStyleUrl: string }) {
             <Banner
               tone="error"
               action={
-                <button
-                  type="button"
-                  onClick={() => void entities.refetch()}
-                  disabled={entities.isFetching}
-                  className="shrink-0 rounded-md border border-border bg-surface px-3 py-2 text-text disabled:opacity-60"
-                >
+                <Button onClick={() => void entities.refetch()} disabled={entities.isFetching}>
                   Coba lagi
-                </button>
+                </Button>
               }
             >
               Data entitas gagal dimuat. Periksa koneksi, lalu coba lagi.
@@ -111,14 +104,48 @@ export function EntitiesPage({ mapStyleUrl }: { mapStyleUrl: string }) {
               Terlalu banyak entitas di area ini. Perbesar peta untuk melihat semuanya.
             </Banner>
           )}
-          {isEmpty && <Banner tone="info">Belum ada entitas di area ini.</Banner>}
+          {isEmpty && !panel.isCreating && (
+            <Banner
+              tone="info"
+              action={
+                <Button
+                  onClick={(event) => {
+                    panel.openCreate(event.currentTarget);
+                  }}
+                >
+                  Tambah entitas
+                </Button>
+              }
+            >
+              Belum ada entitas di area ini.
+            </Banner>
+          )}
         </div>
-        {selection.selectedId !== null && (
+        {panel.selectedId !== null && (
           // The key restarts the panel, so one entity's data never shows under another's.
           <EntityDetailPanel
-            key={selection.selectedId}
-            entityId={selection.selectedId}
-            onClose={selection.close}
+            key={panel.selectedId}
+            entityId={panel.selectedId}
+            onClose={panel.close}
+          />
+        )}
+        {panel.isCreating && (
+          <EntityForm
+            pickedPoint={pickedPoint}
+            onDraftLocationChange={setDraftLocation}
+            onCreated={handleCreated}
+            onCancel={() => {
+              leaveCreate();
+              panel.close();
+            }}
+          />
+        )}
+        {toast !== null && (
+          <Toast
+            message={toast}
+            onDismiss={() => {
+              setToast(null);
+            }}
           />
         )}
       </main>

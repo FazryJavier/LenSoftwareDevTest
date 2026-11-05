@@ -8,6 +8,36 @@ import (
 	"github.com/FazryJavier/LenSoftwareDevTest/backend/internal/domain"
 )
 
+func createEntityHandler(entities EntityStore, logger *slog.Logger) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var request entityRequest
+		if failure := decodeJSONBody(w, r, &request); failure != nil {
+			writeError(w, failure.status, failure.message, failure.item)
+			return
+		}
+
+		input, violations := request.toDomain().Validate()
+		if violations != nil {
+			writeError(w, http.StatusUnprocessableEntity, "Validation failed.", newViolationItems(violations)...)
+			return
+		}
+
+		entity, err := entities.Create(r.Context(), input)
+		if err != nil {
+			logger.ErrorContext(r.Context(), "create entity failed",
+				"request_id", requestIDFrom(r.Context()),
+				"error", err,
+			)
+			writeError(w, http.StatusInternalServerError, "Internal server error.",
+				generalError(codeInternalError, "Internal server error."))
+			return
+		}
+
+		w.Header().Set("Location", "/api/v1/entities/"+entity.ID)
+		writeSuccess(w, http.StatusCreated, "Entity created.", newEntityResponse(entity), nil)
+	})
+}
+
 func getEntityHandler(entities EntityStore, logger *slog.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")

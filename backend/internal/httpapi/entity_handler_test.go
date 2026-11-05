@@ -18,6 +18,14 @@ type fakeEntityStore struct {
 	err        error
 	lastFilter domain.ListFilter
 	lastID     string
+	lastInput  domain.EntityInput
+	created    bool
+}
+
+func (f *fakeEntityStore) Create(_ context.Context, input domain.EntityInput) (domain.Entity, error) {
+	f.created = true
+	f.lastInput = input
+	return f.entity, f.err
 }
 
 func (f *fakeEntityStore) Get(_ context.Context, id string) (domain.Entity, error) {

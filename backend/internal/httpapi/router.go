@@ -13,6 +13,7 @@ import (
 type EntityStore interface {
 	List(ctx context.Context, filter domain.ListFilter) (domain.EntityPage, error)
 	Get(ctx context.Context, id string) (domain.Entity, error)
+	Create(ctx context.Context, input domain.EntityInput) (domain.Entity, error)
 }
 
 // Dependencies are the collaborators the HTTP layer needs.
@@ -28,6 +29,7 @@ func NewRouter(deps Dependencies) http.Handler {
 	mux := http.NewServeMux()
 	mux.Handle("GET /api/v1/health", healthHandler(deps.Health, deps.Logger))
 	mux.Handle("GET /api/v1/entities", listEntitiesHandler(deps.Entities, deps.Logger))
+	mux.Handle("POST /api/v1/entities", createEntityHandler(deps.Entities, deps.Logger))
 	mux.Handle("GET /api/v1/entities/{id}", getEntityHandler(deps.Entities, deps.Logger))
 
 	return withMiddleware(withEnvelopeFallback(mux), deps)

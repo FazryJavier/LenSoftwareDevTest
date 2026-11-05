@@ -66,6 +66,23 @@ func (s *EntityStore) List(ctx context.Context, filter domain.ListFilter) (domai
 	return domain.EntityPage{Entities: entities, Total: total}, nil
 }
 
+// Create stores a validated entity and returns it as saved.
+func (s *EntityStore) Create(ctx context.Context, input domain.EntityInput) (domain.Entity, error) {
+	rows, err := s.db.Query(ctx, `
+		INSERT INTO entities (name, type, status, description, attributes, location)
+		VALUES ($1, $2, $3, $4, $5, ST_SetSRID(ST_MakePoint($6, $7), 4326)::geography)
+		RETURNING `+entityColumns,
+		input.Name, input.Type, input.Status, input.Description, input.Attributes, input.Longitude, input.Latitude)
+	if err != nil {
+		return domain.Entity{}, fmt.Errorf("create entity: %w", err)
+	}
+	entity, err := pgx.CollectExactlyOneRow(rows, scanEntity)
+	if err != nil {
+		return domain.Entity{}, fmt.Errorf("read created entity: %w", err)
+	}
+	return entity, nil
+}
+
 // Get returns one entity, or domain.ErrNotFound when it does not exist.
 func (s *EntityStore) Get(ctx context.Context, id string) (domain.Entity, error) {
 	rows, err := s.db.Query(ctx, "SELECT "+entityColumns+" FROM entities WHERE id = $1::uuid", id)

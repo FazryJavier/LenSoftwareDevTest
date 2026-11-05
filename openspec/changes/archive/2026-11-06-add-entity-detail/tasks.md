@@ -25,7 +25,7 @@
 ## 5. Pemeriksaan akhir
 
 - [x] 5.1 Jalankan semua pemeriksaan pada bagian Perintah di `CLAUDE.md`, dan laporkan yang tidak dapat dijalankan
-- [ ] 5.2 Buka Pull Request dengan auto-merge, dan buktikan semua job CI lulus
+- [x] 5.2 Buka Pull Request dengan auto-merge, dan buktikan semua job CI lulus
 
 ## Workflow follow-up
 

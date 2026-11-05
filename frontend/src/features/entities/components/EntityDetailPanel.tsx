@@ -1,10 +1,10 @@
-import { X } from 'lucide-react';
 import { useEffect, useRef, type ReactNode } from 'react';
 import { ApiError } from '../../../api/errors';
 import { ENTITY_STATUSES, ENTITY_TYPES } from '../constants';
 import { formatCoordinates, formatDateTime } from '../format';
 import { useEntity } from '../hooks';
 import type { Entity } from '../schema';
+import { Panel } from './Panel';
 
 interface EntityDetailPanelProps {
   entityId: string;
@@ -22,25 +22,13 @@ export function EntityDetailPanel({ entityId, onClose }: EntityDetailPanelProps)
   const isNotFound = entity.error instanceof ApiError && entity.error.status === 404;
 
   return (
-    <aside
-      aria-label="Detail entitas"
-      className="absolute inset-x-0 bottom-0 z-10 max-h-1/2 overflow-y-auto rounded-t-lg border border-border bg-surface p-4 shadow-md md:top-4 md:right-4 md:bottom-auto md:left-auto md:max-h-11/12 md:w-90 md:rounded-lg"
+    <Panel
+      label="Detail entitas"
+      title={entity.data?.name ?? 'Detail entitas'}
+      onClose={onClose}
+      closeLabel="Tutup detail"
+      closeRef={closeButton}
     >
-      <div className="flex items-start justify-between gap-3">
-        <h2 className="text-lg font-semibold break-words">
-          {entity.data?.name ?? 'Detail entitas'}
-        </h2>
-        <button
-          ref={closeButton}
-          type="button"
-          aria-label="Tutup detail"
-          onClick={onClose}
-          className="shrink-0 rounded-md p-1 text-text-muted hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
-        >
-          <X size={20} aria-hidden="true" />
-        </button>
-      </div>
-
       {entity.isPending && (
         <p role="status" className="mt-3 text-sm text-text-muted">
           Memuat detail…
@@ -65,7 +53,7 @@ export function EntityDetailPanel({ entityId, onClose }: EntityDetailPanelProps)
         </div>
       )}
       {entity.data !== undefined && <EntityDetails entity={entity.data} />}
-    </aside>
+    </Panel>
   );
 }
 

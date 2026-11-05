@@ -53,3 +53,28 @@ func newPaginationMeta(filter domain.ListFilter, total int) paginationMeta {
 		TotalPages: (total + filter.PerPage - 1) / filter.PerPage,
 	}
 }
+
+// entityRequest uses untyped fields so that domain validation can report wrong types
+// together with every other violation.
+type entityRequest struct {
+	Name        any `json:"name"`
+	Type        any `json:"type"`
+	Status      any `json:"status"`
+	Description any `json:"description"`
+	Attributes  any `json:"attributes"`
+	Latitude    any `json:"latitude"`
+	Longitude   any `json:"longitude"`
+}
+
+func (r entityRequest) toDomain() domain.RawEntityInput {
+	return domain.RawEntityInput(r)
+}
+
+func newViolationItems(violations []domain.Violation) []errorItem {
+	items := make([]errorItem, 0, len(violations))
+	for _, violation := range violations {
+		field := violation.Field
+		items = append(items, errorItem{Field: &field, Code: violation.Code, Message: violation.Message})
+	}
+	return items
+}

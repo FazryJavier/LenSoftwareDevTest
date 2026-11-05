@@ -1,10 +1,20 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { getEntity, listEntities } from './api';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { createEntity, getEntity, listEntities } from './api';
 
 const entityKeys = {
-  list: (bbox: string | null) => ['entities', 'list', bbox] as const,
+  lists: ['entities', 'list'] as const,
+  list: (bbox: string | null) => [...entityKeys.lists, bbox] as const,
   detail: (id: string) => ['entities', 'detail', id] as const,
 };
+
+/** Creates an entity, then reloads the map so it shows what was actually saved. */
+export function useCreateEntity() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createEntity,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: entityKeys.lists }),
+  });
+}
 
 /** Loads one entity. A 404 is a real answer, so failures are not retried automatically. */
 export function useEntity(id: string) {
