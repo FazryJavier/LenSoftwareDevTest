@@ -50,45 +50,35 @@ docker compose exec db sh -c 'createdb -U "$POSTGRES_USER" geoentity_test'
 
 Jalur ini sudah diuji di Windows dengan PostgreSQL 18 dan PostGIS 3.6. Prasyaratnya PostgreSQL dengan ekstensi PostGIS, Go 1.27, dan Node.js 24. Contoh perintah di bawah memakai PowerShell.
 
+File `.env` di root hanya dibaca Docker Compose, dan nilai `DATABASE_URL` di dalamnya menunjuk ke service `db` milik Compose. Tanpa Docker, backend hanya membaca environment terminal dan Vite mencari `.env` di folder `frontend/`, sehingga perintah di bawah mengisi nilainya sendiri.
+
 Jalankan sekali dari folder repository. `psql` akan meminta password superuser PostgreSQL:
 
 ```powershell
 psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f db/local/setup.sql
 ```
 
-Terminal pertama menjalankan backend:
+Dari folder repository, terminal pertama menjalankan backend:
 
 ```powershell
-cd backend
+npm run dev:backend
 ```
+
+Terminal kedua menjalankan frontend. Dependensi dipasang otomatis bila `frontend/node_modules` belum ada:
 
 ```powershell
-$env:DATABASE_URL="postgres://geo:geo_local_only@localhost:5432/geoentity?sslmode=disable"
+npm run dev:frontend
 ```
+
+Buka http://localhost:5173. Peta Indonesia tampil bila semuanya berjalan. Hentikan dengan `Ctrl+C` di masing-masing terminal.
+
+Kedua perintah itu menjalankan `go run ./cmd/server` di `backend` dan `npm run dev` di `frontend`, dengan `DATABASE_URL` dan `VITE_MAP_STYLE_URL` lokal yang sudah terisi di [`scripts/dev.mjs`](../scripts/dev.mjs). File `.env` tidak dibaca dan tidak diperlukan. Variabel yang disetel di terminal lebih diutamakan, misalnya untuk memakai database dari Compose:
 
 ```powershell
-go run ./cmd/server
+$env:DATABASE_URL="postgres://geo:geo_local_only@localhost:5433/geoentity?sslmode=disable"
 ```
 
-Terminal kedua menjalankan frontend:
-
-```powershell
-cd frontend
-```
-
-```powershell
-npm ci
-```
-
-```powershell
-$env:VITE_MAP_STYLE_URL="https://tiles.openfreemap.org/styles/liberty"
-```
-
-```powershell
-npm run dev
-```
-
-Buka http://localhost:5173. Peta Indonesia tampil bila semuanya berjalan. Bila backend memakai port selain 8080, setel `$env:API_PROXY_TARGET` sebelum `npm run dev`, misalnya `http://localhost:8082`.
+Bila backend memakai port selain 8080, setel `$env:HTTP_ADDR` di terminal backend dan `$env:API_PROXY_TARGET` di terminal frontend, misalnya `:8082` dan `http://localhost:8082`.
 
 Data contoh diisi dengan perintah berikut. Password role `geo` adalah `geo_local_only`:
 
@@ -157,3 +147,5 @@ curl -X POST http://localhost:8080/api/v1/entities -H "Content-Type: application
 | `port is already allocated` | Port sudah terpakai | Ubah port di `.env` |
 | API membalas 503 | Database belum siap | Tunggu sebentar, lalu periksa `docker compose logs db` |
 | Peta tidak muncul sama sekali | WebGL nonaktif di browser | Aktifkan akselerasi hardware atau ganti browser |
+| Backend berhenti dengan `DATABASE_URL is required` | Variabel belum disetel di terminal itu | Setel `$env:DATABASE_URL`, lalu jalankan lagi |
+| Halaman kosong dengan `Invalid environment variables` di console | `VITE_MAP_STYLE_URL` belum disetel | Setel `$env:VITE_MAP_STYLE_URL`, lalu jalankan lagi `npm run dev` |

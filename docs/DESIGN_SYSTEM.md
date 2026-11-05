@@ -71,8 +71,8 @@ Marker berupa `<button>` dengan `aria-label`, misalnya "Truk Logistik 01, Kendar
 |---|---|
 | `Button` | `primary`, `secondary`, `danger`; `disabled`, `loading` |
 | `Field` | Label, input, teks bantuan, pesan error |
-| `Select` | Memakai `<select>` native |
-| `Badge` | Warna status beserta teks |
+| `Select` | Memakai `<select>` native; ditulis di `Field.tsx` bersama `TextInput` dan `TextArea` |
+| Badge status | Warna status beserta teks; ditulis langsung pada panel detail, belum menjadi komponen terpisah |
 | `Dialog` | Elemen `<dialog>` native untuk konfirmasi |
 | `Toast` | Sukses atau error; `role="status"` atau `role="alert"` |
 | `Banner` | Pesan error dan peringatan di atas peta |

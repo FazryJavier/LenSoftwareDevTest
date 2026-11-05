@@ -16,7 +16,7 @@ Soal memberi waktu **2 hari setelah soal diterima**. File soal tercatat pada 5 N
 | 3. Kelola data | Tambah, ubah, hapus | US-004, US-005, US-006 | Selesai |
 | 4. Validasi | Pengujian lintas layer untuk semua aturan | US-007 | Selesai |
 | 5. Tambahan | Filter jenis dan status | US-008 | Selesai |
-| 6. Penyelesaian | Uji end-to-end, finalisasi dokumen, pengiriman | — | Belum mulai |
+| 6. Penyelesaian | Uji end-to-end, finalisasi dokumen, pengiriman | — | Sedang dikerjakan |
 
 Validasi dibangun bersama fitur tambah dan ubah pada fase 3. Fase 4 memastikan seluruh aturan [PRD §5](PRD.md#5-aturan-validasi) sudah tercakup.
 
@@ -48,12 +48,12 @@ Definition of Done untuk setiap user story:
 | Layanan tile OpenFreeMap tidak tersedia | Peta kosong, tetapi marker dan data tetap berjalan | URL style dapat diganti lewat `VITE_MAP_STYLE_URL` |
 | Port bentrok di mesin reviewer | Aplikasi gagal jalan | Port dapat diatur lewat `.env` |
 | Versi library baru tidak kompatibel | Build gagal | Versi dikunci di lockfile; hasil cek ada di [ITA §3](ITA.md#3-hasil-cek-kompatibilitas) |
-| Hasil AI keliru | Bug atau dokumentasi tidak akurat | Setiap perubahan diuji dan ditinjau kandidat; lihat [WORKFLOW](WORKFLOW.md) |
+| Hasil AI keliru | Bug atau dokumentasi tidak akurat | Setiap perubahan diuji secara lokal dan di CI, dan kandidat dapat meninjau PR; lihat [WORKFLOW](WORKFLOW.md) |
 | Waktu habis | Fitur tidak lengkap | Ikuti urutan pada §3 dan catat di README |
 
 ## 6. Deliverable pengiriman
 
-- [ ] Repository `FazryJavier/LenSoftwareDevTest` dapat diakses oleh penilai.
-- [ ] README berisi cara menjalankan, alasan library, penggunaan Agentic AI, dan status fitur.
-- [ ] `CLAUDE.md` ada di root repository.
+- [x] Repository `FazryJavier/LenSoftwareDevTest` dapat diakses oleh penilai.
+- [x] README berisi cara menjalankan, alasan library, penggunaan Agentic AI, dan status fitur.
+- [x] `CLAUDE.md` ada di root repository.
 - [ ] Tautan repository dikirim ke `ibnu.mukhtarom@len-iot.io` dan `muhammad.padmanaba@len-iot.io`.

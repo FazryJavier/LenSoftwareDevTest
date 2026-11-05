@@ -1,6 +1,6 @@
 # Architecture
 
-Status: rancangan untuk implementasi. Kode aplikasi belum dibuat; struktur ini dibangun mulai [US-001](user_stories/US-001.md). Struktur file rinci dan aturannya ada di [CLAUDE.md](../CLAUDE.md#struktur-backend).
+Dokumen ini menggambarkan sistem yang sudah berjalan. Status fitur ada di [README](../README.md#status).
 
 ## 1. Konteks sistem
 
@@ -27,40 +27,7 @@ Pada pengembangan lokal, Vite dev server meneruskan `/api/` ke `localhost:8080`.
 
 ## 2. Struktur repository
 
-```text
-.
-├── .claude/               # Skill, command, dan pengaturan Claude Code (di-commit)
-├── .github/               # Workflow CI dan autofix, template PR
-├── backend/
-│   ├── cmd/server/        # Entry point
-│   ├── internal/
-│   │   ├── config/        # Konfigurasi dari environment
-│   │   ├── domain/        # Entity, enum, aturan validasi
-│   │   ├── httpapi/       # Handler, middleware, envelope
-│   │   └── store/         # Query PostgreSQL
-│   └── migrations/        # File SQL goose (di-embed)
-├── frontend/
-│   ├── src/
-│   │   ├── api/           # Klien HTTP dan tipe envelope
-│   │   ├── features/entities/
-│   │   │   ├── components/   # Form, panel detail, filter
-│   │   │   ├── map/          # Peta dan marker
-│   │   │   ├── hooks.ts      # Hook TanStack Query
-│   │   │   └── schema.ts     # Skema Zod
-│   │   └── components/ui/    # Komponen dasar
-│   └── e2e/               # Test Playwright
-├── db/
-│   ├── init/              # Script awal container database
-│   └── local/             # Persiapan PostgreSQL tanpa Docker
-├── docs/                  # Dokumen proyek
-├── openspec/              # Spesifikasi dan change OpenSpec
-├── postman/               # Koleksi uji kontrak
-├── docker-compose.yml
-├── .env.example
-├── CHANGELOG.md
-├── CLAUDE.md
-└── README.md
-```
+Fungsi setiap folder dan file ada di [README](../README.md#struktur-repository). Aturan penempatan kode ada di [CLAUDE.md](../CLAUDE.md#struktur-backend).
 
 ## 3. Backend
 
@@ -77,7 +44,7 @@ flowchart LR
 
 `httpapi` mendefinisikan interface `EntityStore` yang dipenuhi oleh `store`. Dengan begitu handler bisa diuji tanpa database.
 
-**Urutan middleware:** request ID → logging → recover → security headers → CORS. Recover berada di dalam logging agar panic tetap tercatat bersama request ID dan status 500. Batas ukuran body diterapkan saat decode, mulai US-004.
+**Urutan middleware:** request ID → logging → recover → security headers → CORS. Recover berada di dalam logging agar panic tetap tercatat bersama request ID dan status 500. Batas ukuran body diterapkan saat decode.
 
 **Keputusan implementasi**
 
@@ -93,7 +60,7 @@ flowchart LR
 |---|---|---|
 | Server state | TanStack Query | Daftar dan detail entitas |
 | Form state | React Hook Form | Isi form |
-| UI state | `useState` di `EntitiesPage` | Entitas terpilih, mode panel, titik yang dipilih |
+| UI state | `useState` di `EntitiesPage` dan `usePanel` | Entitas terpilih, mode panel, titik yang dipilih |
 | State yang bisa dibagikan | URL search params | Filter jenis dan status |
 
 **Alur data**
@@ -151,7 +118,7 @@ Test integrasi membaca `TEST_DATABASE_URL` dan dilewati bila variabel itu kosong
 
 ## 7. Keamanan
 
-Peninjauan awal terhadap OWASP Top 10. Implementasinya wajib diverifikasi saat kode ditulis.
+Peninjauan terhadap OWASP Top 10 pada kode yang ada. Tabel ini bukan klaim kepatuhan, dan belum ada penetration test.
 
 | Risiko | Penanganan |
 |---|---|
