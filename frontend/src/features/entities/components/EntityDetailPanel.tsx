@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { ApiError } from '../../../api/errors';
+import { Button } from '../../../components/ui/Button';
 import { ENTITY_STATUSES, ENTITY_TYPES } from '../constants';
 import { formatCoordinates, formatDateTime } from '../format';
 import { useEntity } from '../hooks';
@@ -9,9 +10,10 @@ import { Panel } from './Panel';
 interface EntityDetailPanelProps {
   entityId: string;
   onClose: () => void;
+  onEdit: (entity: Entity) => void;
 }
 
-export function EntityDetailPanel({ entityId, onClose }: EntityDetailPanelProps) {
+export function EntityDetailPanel({ entityId, onClose, onEdit }: EntityDetailPanelProps) {
   const entity = useEntity(entityId);
   const closeButton = useRef<HTMLButtonElement>(null);
 
@@ -52,12 +54,12 @@ export function EntityDetailPanel({ entityId, onClose }: EntityDetailPanelProps)
           </button>
         </div>
       )}
-      {entity.data !== undefined && <EntityDetails entity={entity.data} />}
+      {entity.data !== undefined && <EntityDetails entity={entity.data} onEdit={onEdit} />}
     </Panel>
   );
 }
 
-function EntityDetails({ entity }: { entity: Entity }) {
+function EntityDetails({ entity, onEdit }: { entity: Entity; onEdit: (entity: Entity) => void }) {
   const type = ENTITY_TYPES[entity.type];
   const status = ENTITY_STATUSES[entity.status];
   const attributes = Object.entries(entity.attributes);
@@ -92,6 +94,15 @@ function EntityDetails({ entity }: { entity: Entity }) {
       </Detail>
       <Detail label="Dibuat">{formatDateTime(entity.created_at)}</Detail>
       <Detail label="Diperbarui">{formatDateTime(entity.updated_at)}</Detail>
+      <div>
+        <Button
+          onClick={() => {
+            onEdit(entity);
+          }}
+        >
+          Ubah
+        </Button>
+      </div>
     </div>
   );
 }

@@ -46,6 +46,7 @@ interface EntityMapProps {
   entities: Entity[];
   selectedId: string | null;
   onSelect: (id: string, trigger: HTMLElement) => void;
+  hiddenId: string | null;
   draftLocation: MapPoint | null;
   /** When set, clicking the map picks a location and the cursor shows it. */
   onMapPick: ((point: MapPoint) => void) | null;
@@ -59,6 +60,7 @@ export function EntityMap({
   entities,
   selectedId,
   onSelect,
+  hiddenId,
   draftLocation,
   onMapPick,
   onViewReady,
@@ -93,6 +95,7 @@ export function EntityMap({
           key={entity.id}
           entity={entity}
           selected={entity.id === selectedId}
+          hidden={entity.id === hiddenId}
           onSelect={onSelect}
         />
       ))}
@@ -101,7 +104,11 @@ export function EntityMap({
           longitude={draftLocation.longitude}
           latitude={draftLocation.latitude}
           anchor="center"
-          style={{ pointerEvents: 'none', zIndex: 2 }}
+          draggable
+          onDragEnd={(event) => {
+            onMapPick?.({ latitude: event.lngLat.lat, longitude: event.lngLat.lng });
+          }}
+          style={{ zIndex: 2 }}
         >
           <span
             data-testid="draft-marker"

@@ -1,29 +1,46 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-type PanelMode = { kind: 'idle' } | { kind: 'detail'; id: string } | { kind: 'create' };
+import type { Entity } from './schema';
+
+type PanelMode =
+  | { kind: 'idle' }
+  | { kind: 'detail'; id: string }
+  | { kind: 'create' }
+  | { kind: 'edit'; entity: Entity };
 
 /** Tracks what the side panel shows, and where keyboard focus returns when it closes. */
 export function usePanel() {
   const [mode, setMode] = useState<PanelMode>({ kind: 'idle' });
   const trigger = useRef<HTMLElement | null>(null);
 
-  const isCreating = mode.kind === 'create';
+  const isFormOpen = mode.kind === 'create' || mode.kind === 'edit';
 
   const selectEntity = useCallback(
     (id: string, element: HTMLElement) => {
       // Opening details here would throw away what the user typed into the form.
-      if (isCreating) {
+      if (isFormOpen) {
         return;
       }
       trigger.current = element;
       setMode({ kind: 'detail', id });
     },
-    [isCreating],
+    [isFormOpen],
   );
 
   const openCreate = useCallback((element: HTMLElement) => {
     trigger.current = element;
     setMode({ kind: 'create' });
+  }, []);
+
+  const openEdit = useCallback((entity: Entity) => {
+    setMode({ kind: 'edit', entity });
+  }, []);
+
+  /** Leaves a form: a change returns to its entity, and an addition closes the panel. */
+  const cancelForm = useCallback(() => {
+    setMode((current) =>
+      current.kind === 'edit' ? { kind: 'detail', id: current.entity.id } : { kind: 'idle' },
+    );
   }, []);
 
   const showDetail = useCallback((id: string) => {
@@ -62,9 +79,13 @@ export function usePanel() {
 
   return {
     selectedId: mode.kind === 'detail' ? mode.id : null,
-    isCreating,
+    isFormOpen,
+    isCreating: mode.kind === 'create',
+    editingEntity: mode.kind === 'edit' ? mode.entity : null,
     selectEntity,
     openCreate,
+    openEdit,
+    cancelForm,
     showDetail,
     close,
   };

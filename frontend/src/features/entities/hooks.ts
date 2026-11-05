@@ -1,5 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createEntity, getEntity, listEntities } from './api';
+import { createEntity, getEntity, listEntities, updateEntity } from './api';
+import type { EntityPayload } from './formSchema';
 
 const entityKeys = {
   lists: ['entities', 'list'] as const,
@@ -13,6 +14,19 @@ export function useCreateEntity() {
   return useMutation({
     mutationFn: createEntity,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: entityKeys.lists }),
+  });
+}
+
+/** Saves changes. The panel shows the saved values at once, and the map reloads its markers. */
+export function useUpdateEntity() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: EntityPayload }) =>
+      updateEntity(id, payload),
+    onSuccess: (saved) => {
+      queryClient.setQueryData(entityKeys.detail(saved.id), saved);
+      return queryClient.invalidateQueries({ queryKey: entityKeys.lists });
+    },
   });
 }
 

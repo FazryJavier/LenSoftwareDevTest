@@ -50,15 +50,15 @@ export function EntitiesPage({ mapStyleUrl }: { mapStyleUrl: string }) {
   const hasMoreThanLoaded = entities.data !== undefined && entities.data.total > loaded.length;
   const isEmpty = entities.isSuccess && !entities.isPlaceholderData && loaded.length === 0;
 
-  const leaveCreate = () => {
+  const leaveForm = () => {
     setPickedPoint(null);
     setDraftLocation(null);
   };
 
-  const handleCreated = (entity: Entity) => {
-    leaveCreate();
+  const handleSaved = (entity: Entity) => {
+    setToast(panel.isCreating ? 'Entitas berhasil ditambahkan.' : 'Perubahan berhasil disimpan.');
+    leaveForm();
     panel.showDetail(entity.id);
-    setToast('Entitas berhasil ditambahkan.');
   };
 
   return (
@@ -67,7 +67,7 @@ export function EntitiesPage({ mapStyleUrl }: { mapStyleUrl: string }) {
         <h1 className="text-lg font-semibold">GeoEntity Manager</h1>
         <Button
           variant="primary"
-          disabled={panel.isCreating}
+          disabled={panel.isFormOpen}
           onClick={(event) => {
             panel.openCreate(event.currentTarget);
           }}
@@ -81,8 +81,9 @@ export function EntitiesPage({ mapStyleUrl }: { mapStyleUrl: string }) {
           entities={loaded}
           selectedId={panel.selectedId}
           onSelect={panel.selectEntity}
+          hiddenId={panel.editingEntity?.id ?? null}
           draftLocation={draftLocation}
-          onMapPick={panel.isCreating ? setPickedPoint : null}
+          onMapPick={panel.isFormOpen ? setPickedPoint : null}
           onViewReady={area.setNow}
           onViewChange={area.setDebounced}
         />
@@ -104,7 +105,7 @@ export function EntitiesPage({ mapStyleUrl }: { mapStyleUrl: string }) {
               Terlalu banyak entitas di area ini. Perbesar peta untuk melihat semuanya.
             </Banner>
           )}
-          {isEmpty && !panel.isCreating && (
+          {isEmpty && !panel.isFormOpen && (
             <Banner
               tone="info"
               action={
@@ -127,16 +128,18 @@ export function EntitiesPage({ mapStyleUrl }: { mapStyleUrl: string }) {
             key={panel.selectedId}
             entityId={panel.selectedId}
             onClose={panel.close}
+            onEdit={panel.openEdit}
           />
         )}
-        {panel.isCreating && (
+        {panel.isFormOpen && (
           <EntityForm
+            {...(panel.editingEntity === null ? {} : { entity: panel.editingEntity })}
             pickedPoint={pickedPoint}
             onDraftLocationChange={setDraftLocation}
-            onCreated={handleCreated}
+            onSaved={handleSaved}
             onCancel={() => {
-              leaveCreate();
-              panel.close();
+              leaveForm();
+              panel.cancelForm();
             }}
           />
         )}

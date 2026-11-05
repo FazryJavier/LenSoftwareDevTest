@@ -31,6 +31,20 @@ export async function createEntity(payload: EntityPayload): Promise<Entity> {
   return parsed.data;
 }
 
+export async function updateEntity(id: string, payload: EntityPayload): Promise<Entity> {
+  const response = await apiRequest(`/entities/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const parsed = entitySchema.safeParse(response.data);
+  if (!parsed.success) {
+    throw new ApiError(200, 'Server mengirim data entitas yang tidak dikenali.', []);
+  }
+  return parsed.data;
+}
+
 export async function getEntity(id: string, signal?: AbortSignal): Promise<Entity> {
   const response = await apiRequest(`/entities/${encodeURIComponent(id)}`, { signal });
 

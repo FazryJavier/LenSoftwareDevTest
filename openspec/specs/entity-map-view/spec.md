@@ -102,3 +102,10 @@ Sistem SHALL menampilkan marker entitas terpilih secara berbeda dari marker lain
 #### Scenario: Marker dipilih
 - **WHEN** pengguna memilih marker
 - **THEN** marker itu tampil lebih besar dengan cincin warna utama, dan memiliki `aria-pressed` bernilai true
+
+### Requirement: Keadaan kosong mengajak menambah entitas
+Sistem SHALL menawarkan aksi menambah entitas saat area yang terlihat tidak memiliki entitas.
+
+#### Scenario: Area kosong
+- **WHEN** daftar pada area yang terlihat kosong
+- **THEN** pesan kosong tampil bersama tombol untuk menambah entitas
