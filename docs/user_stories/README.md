@@ -11,7 +11,7 @@ Setiap fitur memiliki satu file `US-{nomor}.md`. Implementasinya dilacak melalui
 | [US-005](US-005.md) | Mengubah entitas | Must | Selesai | `add-entity-update` |
 | [US-006](US-006.md) | Menghapus entitas | Must | Selesai | `add-entity-delete` |
 | [US-007](US-007.md) | Validasi lintas layer | Must | Selesai | `add-validation-coverage` |
-| [US-008](US-008.md) | Filter jenis dan status | Should | Sedang dikerjakan | `add-entity-filters` |
+| [US-008](US-008.md) | Filter jenis dan status | Should | Selesai | `add-entity-filters` |
 
 **Nilai status:** Belum mulai, Sedang dikerjakan, Selesai, Dipotong.
 

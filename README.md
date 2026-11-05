@@ -17,7 +17,7 @@ Aplikasi web untuk menampilkan dan mengelola entitas berlokasi geografis, sepert
 | Mengubah entitas | [US-005](docs/user_stories/US-005.md) | Selesai |
 | Menghapus entitas | [US-006](docs/user_stories/US-006.md) | Selesai |
 | Validasi frontend dan backend | [US-007](docs/user_stories/US-007.md) | Selesai |
-| Filter jenis dan status | [US-008](docs/user_stories/US-008.md) | Sedang dikerjakan |
+| Filter jenis dan status | [US-008](docs/user_stories/US-008.md) | Selesai |
 
 Batasan yang disengaja, seperti tidak adanya autentikasi, tercatat di [PRD §7](docs/PRD.md#7-di-luar-ruang-lingkup).
 
