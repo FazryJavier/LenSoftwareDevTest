@@ -1,0 +1,66 @@
+name: geoentity
+
+services:
+  db:
+    image: postgis/postgis:17-3.7
+    # The image is only published for amd64, so ARM machines run it through emulation.
+    platform: linux/amd64
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?Salin .env.example menjadi .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Salin .env.example menjadi .env}
+      POSTGRES_DB: ${POSTGRES_DB:?Salin .env.example menjadi .env}
+    ports:
+      - '${POSTGRES_PORT:-5433}:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      # Mounted as a file: the entrypoint ignores subfolders, and mounting the whole
+      # directory would hide the image's own PostGIS setup script.
+      - ./db/init/01-create-test-db.sql:/docker-entrypoint-initdb.d/01-create-test-db.sql:ro
+    # -h 127.0.0.1 keeps this failing during image initialisation, when the server
+    # temporarily listens only on a unix socket.
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Salin .env.example menjadi .env}
+      HTTP_ADDR: ':8080'
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+    ports:
+      - '${BACKEND_PORT:-8080}:8080'
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:8080/api/v1/health']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_MAP_STYLE_URL: ${VITE_MAP_STYLE_URL:?Salin .env.example menjadi .env}
+    ports:
+      - '${FRONTEND_PORT:-5173}:8080'
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: on-failure
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:8080/']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+
+volumes:
+  db-data:

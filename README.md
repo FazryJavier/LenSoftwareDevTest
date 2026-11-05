@@ -6,11 +6,11 @@ Aplikasi web untuk menampilkan dan mengelola entitas berlokasi geografis, sepert
 
 ## Status
 
-> Saat ini baru fondasi dokumen, OpenSpec, dan CI yang tersedia. **Kode aplikasi belum dibuat, sehingga perintah pada bagian "Cara menjalankan" belum bisa dipakai.**
+> Saat ini baru fondasi aplikasi yang tersedia: halaman awal, endpoint health, dan migrasi database. **Peta dan pengelolaan entitas belum dibuat.** Jalur Docker Compose belum dibuktikan di lokal, karena Docker Desktop gagal berjalan di mesin pengembangan.
 
 | Fitur | User story | Status |
 |---|---|---|
-| Fondasi aplikasi | [US-001](docs/user_stories/US-001.md) | Belum mulai |
+| Fondasi aplikasi | [US-001](docs/user_stories/US-001.md) | Sedang dikerjakan |
 | Menampilkan entitas pada peta | [US-002](docs/user_stories/US-002.md) | Belum mulai |
 | Melihat detail entitas | [US-003](docs/user_stories/US-003.md) | Belum mulai |
 | Menambah entitas | [US-004](docs/user_stories/US-004.md) | Belum mulai |
@@ -33,7 +33,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Aplikasi direncanakan tersedia di http://localhost:5173. Panduan lengkap ada di [GUIDE](docs/GUIDE.md).
+Aplikasi tersedia di http://localhost:5173. Panduan lengkap, termasuk cara menjalankan tanpa Docker yang sudah diuji di Windows, ada di [GUIDE](docs/GUIDE.md).
 
 ## Alasan pemilihan library
 

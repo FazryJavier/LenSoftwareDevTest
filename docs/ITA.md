@@ -45,7 +45,7 @@ Versi dicek pada 5 November 2026. Nilai akhir dikunci oleh `package-lock.json` d
 | Validasi | Zod + `@hookform/resolvers` | 4 + 7 | Skema sekaligus tipe TypeScript | Yup: inferensi tipe lebih lemah |
 | Styling | Tailwind CSS | 4 | Cepat dan konsisten dengan token desain | CSS Modules: perlu lebih banyak CSS manual |
 | Ikon | `lucide-react` | terbaru saat scaffolding | Ikon SVG yang bisa di-tree-shake | — |
-| Unit test | Vitest + Testing Library | 5 + 16 | Satu konfigurasi dengan Vite | Jest: perlu konfigurasi transform |
+| Unit test | Vitest + Testing Library + jsdom | 5 + 16 + 29 | Satu konfigurasi dengan Vite; jsdom menyediakan DOM untuk test | Jest: perlu konfigurasi transform |
 | E2E test | Playwright | 1.64 | Menguji alur nyata pada browser | Cypress: lebih berat di CI |
 | Lint dan format | ESLint + typescript-eslint + Prettier | 10 + 8 + 3 | Standar ekosistem | — |
 
@@ -63,7 +63,9 @@ Versi dicek pada 5 November 2026. Nilai akhir dikunci oleh `package-lock.json` d
 
 ## 3. Hasil cek kompatibilitas
 
-Temuan dari pemeriksaan metadata registry pada 5 November 2026. Kombinasi ini belum dibuktikan oleh build; pembuktiannya ada di [US-001](user_stories/US-001.md).
+Temuan dari pemeriksaan metadata registry pada 5 November 2026. Pada US-001, kombinasi frontend terbukti lewat instalasi, lint, test, dan build. Backend terbukti lewat build dan test terhadap PostgreSQL 18 dengan PostGIS 3.6. Image Docker dan versi PostgreSQL 17 dengan PostGIS 3.7 belum dibuktikan di lokal, karena Docker Desktop gagal berjalan di mesin pengembangan.
+
+Versi terkunci saat ini: `pgx` v5.12.0, `goose` v3.29.0, dan versi frontend pada `frontend/package-lock.json`.
 
 | Temuan | Keputusan |
 |---|---|

@@ -42,6 +42,7 @@ Pada pengembangan lokal, Vite dev server meneruskan `/api/` ke `localhost:8080`.
 ├── frontend/
 │   ├── src/
 │   │   ├── api/           # Klien HTTP dan tipe envelope
+│   │   ├── features/system/  # Status koneksi backend
 │   │   ├── features/entities/
 │   │   │   ├── components/   # Form, panel detail, filter
 │   │   │   ├── map/          # Peta dan marker
@@ -49,6 +50,9 @@ Pada pengembangan lokal, Vite dev server meneruskan `/api/` ke `localhost:8080`.
 │   │   │   └── schema.ts     # Skema Zod
 │   │   └── components/ui/    # Komponen dasar
 │   └── e2e/               # Test Playwright
+├── db/
+│   ├── init/              # Script awal container database
+│   └── local/             # Persiapan PostgreSQL tanpa Docker
 ├── docs/                  # Dokumen proyek
 ├── openspec/              # Spesifikasi dan change OpenSpec
 ├── postman/               # Koleksi uji kontrak
@@ -74,7 +78,7 @@ flowchart LR
 
 `httpapi` mendefinisikan interface `EntityStore` yang dipenuhi oleh `store`. Dengan begitu handler bisa diuji tanpa database.
 
-**Urutan middleware:** recover → request ID → logging → security headers → CORS → batas ukuran body.
+**Urutan middleware:** request ID → logging → recover → security headers → CORS. Recover berada di dalam logging agar panic tetap tercatat bersama request ID dan status 500. Batas ukuran body diterapkan saat decode, mulai US-004.
 
 **Keputusan implementasi**
 

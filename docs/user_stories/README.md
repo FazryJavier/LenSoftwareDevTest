@@ -4,7 +4,7 @@ Setiap fitur memiliki satu file `US-{nomor}.md`. Implementasinya dilacak melalui
 
 | ID | Judul | Prioritas | Status | Change OpenSpec |
 |---|---|---|---|---|
-| [US-001](US-001.md) | Fondasi aplikasi | Must | Belum mulai | `add-project-foundation` |
+| [US-001](US-001.md) | Fondasi aplikasi | Must | Sedang dikerjakan | `add-project-foundation` |
 | [US-002](US-002.md) | Menampilkan entitas pada peta | Must | Belum mulai | `add-entity-map-view` |
 | [US-003](US-003.md) | Melihat detail entitas | Must | Belum mulai | `add-entity-detail` |
 | [US-004](US-004.md) | Menambah entitas | Must | Belum mulai | `add-entity-create` |
