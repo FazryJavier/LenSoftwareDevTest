@@ -22,6 +22,12 @@ describe('toFormErrors', () => {
     });
   });
 
+  it('says the entity is gone on a 404', () => {
+    expect(toFormErrors(new ApiError(404, 'Entity not found.', [])).general).toContain(
+      'tidak ditemukan',
+    );
+  });
+
   it.each([
     ['a server error', new ApiError(500, 'Internal server error.', [])],
     ['a network failure', new ApiError(0, 'Tidak dapat menghubungi server.', [])],

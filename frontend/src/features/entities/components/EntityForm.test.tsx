@@ -48,18 +48,19 @@ function failure(status: number, errors: unknown[]) {
 }
 
 const fetchStub = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>();
-const onCreated = vi.fn();
+const onSaved = vi.fn();
 const onCancel = vi.fn();
 const onDraftLocationChange = vi.fn();
 const queryClient = () => new QueryClient();
 
-function formWith(client: QueryClient, pickedPoint: MapPoint | null) {
+function formWith(client: QueryClient, pickedPoint: MapPoint | null, entity?: Entity) {
   return (
     <QueryClientProvider client={client}>
       <EntityForm
+        {...(entity === undefined ? {} : { entity })}
         pickedPoint={pickedPoint}
         onDraftLocationChange={onDraftLocationChange}
-        onCreated={onCreated}
+        onSaved={onSaved}
         onCancel={onCancel}
       />
     </QueryClientProvider>
@@ -96,7 +97,7 @@ const save = () => userEvent.click(screen.getByRole('button', { name: 'Simpan' }
 describe('EntityForm', () => {
   beforeEach(() => {
     fetchStub.mockReset();
-    onCreated.mockReset();
+    onSaved.mockReset();
     onCancel.mockReset();
     onDraftLocationChange.mockReset();
     vi.stubGlobal('fetch', fetchStub);
@@ -122,7 +123,7 @@ describe('EntityForm', () => {
     expect(screen.getByText('Longitude wajib diisi.')).toBeInTheDocument();
     expect(screen.getByLabelText(/Nama/)).toHaveAccessibleDescription('Nama wajib diisi.');
     expect(fetchStub).not.toHaveBeenCalled();
-    expect(onCreated).not.toHaveBeenCalled();
+    expect(onSaved).not.toHaveBeenCalled();
   });
 
   it('sends the payload and reports the created entity', async () => {
@@ -137,9 +138,9 @@ describe('EntityForm', () => {
     await save();
 
     await waitFor(() => {
-      expect(onCreated).toHaveBeenCalledTimes(1);
+      expect(onSaved).toHaveBeenCalledTimes(1);
     });
-    expect(onCreated.mock.calls[0]?.[0]).toEqual(CREATED);
+    expect(onSaved.mock.calls[0]?.[0]).toEqual(CREATED);
     const [url, init] = fetchStub.mock.calls[0] ?? [];
     expect(url).toBe('/api/v1/entities');
     expect(init?.method).toBe('POST');
@@ -203,7 +204,7 @@ describe('EntityForm', () => {
       finish(created());
     });
     await waitFor(() => {
-      expect(onCreated).toHaveBeenCalledTimes(1);
+      expect(onSaved).toHaveBeenCalledTimes(1);
     });
     expect(fetchStub).toHaveBeenCalledTimes(1);
   });
@@ -223,7 +224,7 @@ describe('EntityForm', () => {
     expect(await screen.findByText('Nilainya di luar rentang yang diizinkan.')).toBeInTheDocument();
     expect(screen.getByText('Isinya terlalu panjang.')).toBeInTheDocument();
     expect(screen.getByLabelText(/Nama/)).toHaveValue('Truk');
-    expect(onCreated).not.toHaveBeenCalled();
+    expect(onSaved).not.toHaveBeenCalled();
   });
 
   it('shows a general message on other failures and can try again', async () => {
@@ -241,7 +242,7 @@ describe('EntityForm', () => {
     await save();
 
     await waitFor(() => {
-      expect(onCreated).toHaveBeenCalledTimes(1);
+      expect(onSaved).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -295,6 +296,107 @@ describe('EntityForm', () => {
 
     await waitFor(() => {
       expect(onDraftLocationChange).toHaveBeenLastCalledWith(null);
+    });
+  });
+
+  describe('changing an existing entity', () => {
+    const EXISTING: Entity = {
+      ...CREATED,
+      name: 'Truk Lama',
+      status: 'maintenance',
+      description: 'Armada',
+      attributes: { plate_number: 'D 1234' },
+    };
+
+    function renderEdit() {
+      render(formWith(new QueryClient(), null, EXISTING));
+    }
+
+    function saved() {
+      return new Response(
+        JSON.stringify({
+          code: 200,
+          success: true,
+          message: 'Entity updated.',
+          data: { ...EXISTING, name: 'Truk Baru' },
+          errors: null,
+          meta: null,
+        }),
+      );
+    }
+
+    it('starts with the current values', () => {
+      renderEdit();
+
+      expect(screen.getByRole('heading', { name: 'Ubah entitas' })).toBeInTheDocument();
+      expect(screen.getByLabelText(/Nama/)).toHaveValue('Truk Lama');
+      expect(screen.getByLabelText(/Jenis/)).toHaveValue('vehicle');
+      expect(screen.getByLabelText(/Status/)).toHaveValue('maintenance');
+      expect(screen.getByLabelText(/Latitude/)).toHaveValue('-6.9');
+      expect(screen.getByLabelText(/Longitude/)).toHaveValue('107.6');
+      expect(screen.getByLabelText('Deskripsi')).toHaveValue('Armada');
+      expect(screen.getByLabelText('Key')).toHaveValue('plate_number');
+      expect(screen.getByLabelText('Nilai')).toHaveValue('D 1234');
+    });
+
+    it('previews the current location straight away', async () => {
+      renderEdit();
+
+      await waitFor(() => {
+        expect(onDraftLocationChange).toHaveBeenLastCalledWith({
+          latitude: -6.9,
+          longitude: 107.6,
+        });
+      });
+    });
+
+    it('sends every field with PUT to the entity', async () => {
+      fetchStub.mockResolvedValue(saved());
+      renderEdit();
+      const name = screen.getByLabelText(/Nama/);
+      await userEvent.clear(name);
+      await userEvent.type(name, 'Truk Baru');
+
+      await save();
+
+      await waitFor(() => {
+        expect(onSaved).toHaveBeenCalledTimes(1);
+      });
+      const [url, init] = fetchStub.mock.calls[0] ?? [];
+      expect(url).toBe(`/api/v1/entities/${EXISTING.id}`);
+      expect(init?.method).toBe('PUT');
+      expect(sentBody(init)).toEqual({
+        name: 'Truk Baru',
+        type: 'vehicle',
+        status: 'maintenance',
+        description: 'Armada',
+        attributes: { plate_number: 'D 1234' },
+        latitude: -6.9,
+        longitude: 107.6,
+      });
+    });
+
+    it('says the entity is gone on a 404 and keeps what was typed', async () => {
+      fetchStub.mockResolvedValue(
+        failure(404, [{ field: null, code: 'not_found', message: 'Entity not found.' }]),
+      );
+      renderEdit();
+      await userEvent.type(screen.getByLabelText(/Nama/), ' X');
+
+      await save();
+
+      expect(await screen.findByRole('alert')).toHaveTextContent('tidak ditemukan');
+      expect(screen.getByLabelText(/Nama/)).toHaveValue('Truk Lama X');
+      expect(onSaved).not.toHaveBeenCalled();
+    });
+
+    it('closes without a request or confirmation when nothing changed', async () => {
+      renderEdit();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Batal' }));
+
+      expect(onCancel).toHaveBeenCalledTimes(1);
+      expect(fetchStub).not.toHaveBeenCalled();
     });
   });
 

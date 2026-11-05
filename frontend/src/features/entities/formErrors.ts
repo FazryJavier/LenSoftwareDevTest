@@ -14,6 +14,7 @@ const MESSAGES_BY_CODE: Record<string, string> = {
 };
 
 const GENERAL_FAILURE = 'Entitas gagal disimpan. Periksa koneksi, lalu coba lagi.';
+const NOT_FOUND = 'Entitas ini tidak ditemukan. Mungkin sudah dihapus.';
 
 function messageFor(item: ApiErrorItem): string {
   return MESSAGES_BY_CODE[item.code] ?? item.message;
@@ -31,6 +32,9 @@ export interface FormErrors {
 
 /** Sorts a failed save into messages for the form's fields, its attributes, and the form itself. */
 export function toFormErrors(error: unknown): FormErrors {
+  if (error instanceof ApiError && error.status === 404) {
+    return { fields: [], attributes: null, general: NOT_FOUND };
+  }
   if (!(error instanceof ApiError) || error.status !== 422) {
     return { fields: [], attributes: null, general: GENERAL_FAILURE };
   }

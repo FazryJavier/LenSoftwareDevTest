@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -27,7 +27,9 @@ interface FakeMapProps {
   cursor?: string;
 }
 
-const fakeMap = vi.hoisted((): { props?: FakeMapProps } => ({}));
+type FakeDragEnd = (event: { lngLat: { lat: number; lng: number } }) => void;
+
+const fakeMap = vi.hoisted((): { props?: FakeMapProps; dragEnd?: FakeDragEnd } => ({}));
 
 // jsdom has no WebGL, so the map itself is exercised by the Playwright tests.
 vi.mock('@vis.gl/react-maplibre', () => ({
@@ -35,7 +37,12 @@ vi.mock('@vis.gl/react-maplibre', () => ({
     fakeMap.props = props;
     return <div data-testid="map">{props.children}</div>;
   },
-  Marker: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Marker: ({ children, onDragEnd }: { children: ReactNode; onDragEnd?: FakeDragEnd }) => {
+    if (onDragEnd !== undefined) {
+      fakeMap.dragEnd = onDragEnd;
+    }
+    return <div>{children}</div>;
+  },
   NavigationControl: () => null,
 }));
 
@@ -389,6 +396,111 @@ describe('EntitiesPage', () => {
       ).not.toBeInTheDocument();
       expect(screen.queryByTestId('draft-marker')).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Tambah' })).toHaveFocus();
+    });
+  });
+
+  describe('changing an entity', () => {
+    const CURRENT = entity({ name: 'Truk Lama', latitude: -6.9, longitude: 107.6 });
+    const SAVED = entity({ name: 'Truk Baru', latitude: -7, longitude: 108 });
+
+    function respondWith(init: RequestInit | undefined, url: string, saved: boolean) {
+      if (url.includes('/entities?')) {
+        return listResponse([saved ? SAVED : CURRENT]);
+      }
+      return new Response(
+        JSON.stringify({
+          code: 200,
+          success: true,
+          message: 'OK.',
+          data: saved || init?.method === 'PUT' ? SAVED : CURRENT,
+          errors: null,
+          meta: null,
+        }),
+      );
+    }
+
+    async function openEditForm() {
+      let saved = false;
+      fetchStub.mockImplementation((url, init) => {
+        const response = respondWith(init, url, saved);
+        saved ||= init?.method === 'PUT';
+        return Promise.resolve(response);
+      });
+      renderLoadedPage();
+      const marker = await screen.findByRole('button', { name: /Truk Lama/ });
+      await userEvent.click(marker);
+      await userEvent.click(await screen.findByRole('button', { name: 'Ubah' }));
+      return marker;
+    }
+
+    it('swaps the marker for a draft marker at the same place', async () => {
+      const marker = await openEditForm();
+
+      expect(screen.getByRole('complementary', { name: 'Ubah entitas' })).toBeInTheDocument();
+      expect(marker).toHaveClass('invisible');
+      expect(await screen.findByTestId('draft-marker')).toBeInTheDocument();
+      expect(mapProps().cursor).toBe('crosshair');
+    });
+
+    it('moves the coordinates when the map is clicked', async () => {
+      await openEditForm();
+
+      act(() => {
+        mapProps().onClick({ lngLat: { lat: -7, lng: 108 } });
+      });
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/Latitude/)).toHaveValue('-7.000000');
+      });
+      expect(screen.getByLabelText(/Longitude/)).toHaveValue('108.000000');
+    });
+
+    it('moves the coordinates when the draft marker is dragged', async () => {
+      await openEditForm();
+      await screen.findByTestId('draft-marker');
+
+      act(() => {
+        fakeMap.dragEnd?.({ lngLat: { lat: -8, lng: 109 } });
+      });
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/Latitude/)).toHaveValue('-8.000000');
+      });
+      expect(screen.getByLabelText(/Longitude/)).toHaveValue('109.000000');
+    });
+
+    it('returns to the details with the old data when cancelled', async () => {
+      const marker = await openEditForm();
+      await userEvent.type(screen.getByLabelText(/Nama/), ' X');
+
+      await userEvent.click(screen.getByRole('button', { name: 'Batal' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Buang' }));
+
+      expect(await screen.findByRole('heading', { name: 'Truk Lama' })).toBeInTheDocument();
+      expect(marker).not.toHaveClass('invisible');
+      expect(screen.queryByTestId('draft-marker')).not.toBeInTheDocument();
+      expect(fetchStub.mock.calls.some(([, init]) => init?.method === 'PUT')).toBe(false);
+    });
+
+    it('shows the saved data at once and reloads the marker', async () => {
+      await openEditForm();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Simpan' }));
+
+      expect(await screen.findByRole('heading', { name: 'Truk Baru' })).toBeInTheDocument();
+      expect(screen.getByText('Perubahan berhasil disimpan.')).toBeInTheDocument();
+      expect(await screen.findByRole('button', { name: /Truk Baru, Kendaraan/ })).not.toHaveClass(
+        'invisible',
+      );
+      expect(screen.queryByTestId('draft-marker')).not.toBeInTheDocument();
+    });
+
+    it('does not open another entity while the form is open', async () => {
+      const marker = await openEditForm();
+
+      fireEvent.click(marker);
+
+      expect(screen.getByRole('complementary', { name: 'Ubah entitas' })).toBeInTheDocument();
     });
   });
 

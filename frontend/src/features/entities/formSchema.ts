@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { entityStatusSchema, entityTypeSchema } from './schema';
+import { entityStatusSchema, entityTypeSchema, type Entity } from './schema';
 
 // The rules follow docs/PRD.md section 5. The backend applies them again and has the final say.
 const MAX_NAME = 100;
@@ -95,6 +95,19 @@ export const EMPTY_ENTITY_FORM: EntityFormValues = {
   latitude: '',
   longitude: '',
 };
+
+/** Fills the form with an existing entity's values. */
+export function toFormValues(entity: Entity): EntityFormValues {
+  return {
+    name: entity.name,
+    type: entity.type,
+    status: entity.status,
+    description: entity.description ?? '',
+    attributes: Object.entries(entity.attributes).map(([key, value]) => ({ key, value })),
+    latitude: String(entity.latitude),
+    longitude: String(entity.longitude),
+  };
+}
 
 export interface MapPoint {
   latitude: number;

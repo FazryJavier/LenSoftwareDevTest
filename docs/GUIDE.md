@@ -1,6 +1,6 @@
 # Guide
 
-> **Status:** baru bagian "Melihat entitas", "Melihat detail", dan "Menambah entitas" yang tersedia. Bagian lain pada §2 dan §3 menggambarkan perilaku yang direncanakan dan harus diperiksa kembali setelah fitur selesai. Status terbaru ada di [README](../README.md#status).
+> **Status:** baru bagian "Melihat entitas", "Melihat detail", "Menambah entitas", dan "Mengubah entitas" yang tersedia. Bagian lain pada §2 dan §3 menggambarkan perilaku yang direncanakan dan harus diperiksa kembali setelah fitur selesai. Status terbaru ada di [README](../README.md#status).
 
 ## 1. Menjalankan aplikasi
 

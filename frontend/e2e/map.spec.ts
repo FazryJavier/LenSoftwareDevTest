@@ -1,4 +1,4 @@
-import { expect, test, type Page, type Route } from '@playwright/test';
+import { expect, test, type APIRequestContext, type Page, type Route } from '@playwright/test';
 
 const ENTITY = {
   id: '0b5f6c1e-3d1a-4c55-9d58-3f0a0a2c1e11',
@@ -396,6 +396,162 @@ test.describe('creating through the real API', () => {
       data: JSON.stringify(VALID),
     });
     expect(wrongType.status()).toBe(415);
+  });
+});
+
+test.describe('changing an entity through the real API', () => {
+  async function createEntity(request: APIRequestContext, latitude: number, longitude: number) {
+    const name = `E2E Ubah ${String(Date.now())} ${String(longitude)}`;
+    const response = await request.post('/api/v1/entities', {
+      data: {
+        name,
+        type: 'vehicle',
+        status: 'active',
+        description: 'Awal',
+        attributes: { plate_number: 'D 1' },
+        latitude,
+        longitude,
+      },
+    });
+    expect(response.status()).toBe(201);
+    return { name, location: response.headers().location ?? '' };
+  }
+
+  async function openEditForm(page: Page, name: string) {
+    await stubBaseMap(page);
+    await page.goto('/');
+    await page.getByRole('button', { name: new RegExp(name) }).click();
+    await page.getByRole('button', { name: 'Ubah', exact: true }).click();
+    await expect(page.getByRole('complementary', { name: 'Ubah entitas' })).toBeVisible();
+  }
+
+  test('saves new data and location, which remain after a reload', async ({ page, request }) => {
+    const { name, location } = await createEntity(request, 3, 110);
+    const newName = `${name} Baru`;
+    await openEditForm(page, name);
+    await expect(page.getByLabel(/Nama/)).toHaveValue(name);
+    await expect(page.getByLabel('Key')).toHaveValue('plate_number');
+
+    await page.getByLabel(/Nama/).fill(newName);
+    const canvas = await page.locator('.maplibregl-canvas').boundingBox();
+    if (canvas === null) {
+      throw new Error('The map canvas is not visible.');
+    }
+    await page.mouse.click(canvas.x + canvas.width / 2, canvas.y + canvas.height / 2);
+    await expect(page.getByLabel(/Latitude/)).not.toHaveValue('3');
+    const latitude = Number(await page.getByLabel(/Latitude/).inputValue());
+    await page.getByRole('button', { name: 'Simpan' }).click();
+
+    const panel = page.getByRole('complementary', { name: 'Detail entitas' });
+    await expect(panel.getByRole('heading', { name: newName })).toBeVisible();
+    await expect(page.getByText('Perubahan berhasil disimpan.')).toBeVisible();
+    const marker = page.getByRole('button', { name: new RegExp(newName) });
+    await expect(marker).toBeVisible();
+
+    await page.reload();
+    await expect(marker).toBeVisible();
+
+    const saved: unknown = await (await request.get(location)).json();
+    expect(saved).toMatchObject({
+      data: { name: newName, latitude, attributes: { plate_number: 'D 1' } },
+    });
+  });
+
+  test('follows a dragged marker', async ({ page, request }) => {
+    const { name } = await createEntity(request, 5, 108);
+    await openEditForm(page, name);
+    const draft = page.getByTestId('draft-marker');
+    await expect(draft).toBeVisible();
+    await expect(page.getByRole('button', { name: new RegExp(name) })).toBeHidden();
+
+    const box = await draft.boundingBox();
+    if (box === null) {
+      throw new Error('The draft marker is not visible.');
+    }
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 100, box.y + 80, { steps: 8 });
+    await page.mouse.up();
+
+    await expect(page.getByLabel(/Latitude/)).not.toHaveValue('5');
+    await expect(page.getByLabel(/Longitude/)).not.toHaveValue('108');
+  });
+
+  test('puts everything back when cancelled', async ({ page, request }) => {
+    const { name, location } = await createEntity(request, 1, 112);
+    await openEditForm(page, name);
+    await page.getByLabel(/Nama/).fill('Tidak jadi');
+    await page.getByLabel(/Latitude/).fill('-8');
+
+    await page.getByRole('button', { name: 'Batal' }).click();
+    await page.getByRole('button', { name: 'Buang' }).click();
+
+    const panel = page.getByRole('complementary', { name: 'Detail entitas' });
+    await expect(panel.getByRole('heading', { name })).toBeVisible();
+    await expect(panel.getByText('1.00000, 112.00000')).toBeVisible();
+    await expect(page.getByTestId('draft-marker')).toBeHidden();
+    await expect(page.getByRole('button', { name: new RegExp(name) })).toBeVisible();
+
+    expect(await (await request.get(location)).json()).toMatchObject({
+      data: { name, latitude: 1 },
+    });
+  });
+
+  test('says when the entity disappeared before saving', async ({ page, request }) => {
+    const { name } = await createEntity(request, -1, 114);
+    await page.route(/\/api\/v1\/entities\/[^?]+$/, (route) =>
+      route.request().method() === 'PUT'
+        ? route.fulfill({
+            status: 404,
+            json: {
+              code: 404,
+              success: false,
+              message: 'Entity not found.',
+              data: null,
+              errors: [{ field: null, code: 'not_found', message: 'Entity not found.' }],
+              meta: null,
+            },
+          })
+        : route.continue(),
+    );
+    await openEditForm(page, name);
+    await page.getByLabel(/Nama/).fill('Berubah');
+
+    await page.getByRole('button', { name: 'Simpan' }).click();
+
+    await expect(page.getByRole('alert')).toContainText('tidak ditemukan');
+    await expect(page.getByLabel(/Nama/)).toHaveValue('Berubah');
+  });
+
+  test('the API answers 200, 400, 404, and 422 for PUT', async ({ request }) => {
+    const { location } = await createEntity(request, -3, 116);
+    const valid = {
+      name: 'E2E Ubah API',
+      type: 'other',
+      status: 'inactive',
+      latitude: 0,
+      longitude: 0,
+    };
+
+    const updated = await request.put(location, { data: valid });
+    expect(updated.status()).toBe(200);
+    expect(await updated.json()).toMatchObject({
+      data: { name: 'E2E Ubah API', description: null, attributes: {}, latitude: 0 },
+    });
+
+    const invalidId = await request.put('/api/v1/entities/not-a-uuid', { data: valid });
+    expect(invalidId.status()).toBe(400);
+
+    const missing = await request.put('/api/v1/entities/00000000-0000-4000-8000-000000000000', {
+      data: valid,
+    });
+    expect(missing.status()).toBe(404);
+
+    const invalid = await request.put(location, { data: { ...valid, latitude: 91 } });
+    expect(invalid.status()).toBe(422);
+    expect(await (await request.get(location)).json()).toMatchObject({
+      data: { name: 'E2E Ubah API', latitude: 0 },
+    });
   });
 });
 

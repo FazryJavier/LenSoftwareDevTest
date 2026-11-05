@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   entityFormSchema,
   parseDraftLocation,
+  toFormValues,
   type EntityFormValues,
   type EntityPayload,
 } from './formSchema';
@@ -118,6 +119,50 @@ describe('entityFormSchema', () => {
     ['a longitude below range', { longitude: '-180.1' }, 'longitude'],
   ])('rejects %s', (_label, values, path) => {
     expect(pathsOf(values)).toContain(path);
+  });
+});
+
+describe('toFormValues', () => {
+  const ENTITY = {
+    id: '0b5f6c1e-3d1a-4c55-9d58-3f0a0a2c1e11',
+    name: 'Truk',
+    type: 'vehicle',
+    status: 'active',
+    description: 'Armada',
+    attributes: { plate_number: 'D 1234' },
+    latitude: -6.9,
+    longitude: 107.6,
+    created_at: '2026-11-05T10:00:00Z',
+    updated_at: '2026-11-05T10:00:00Z',
+  } as const;
+
+  it('turns an entity into values the schema accepts unchanged', () => {
+    const payload = entityFormSchema.parse(toFormValues(ENTITY));
+
+    expect(payload).toEqual({
+      name: 'Truk',
+      type: 'vehicle',
+      status: 'active',
+      description: 'Armada',
+      attributes: { plate_number: 'D 1234' },
+      latitude: -6.9,
+      longitude: 107.6,
+    });
+  });
+
+  it('leaves empty optional values empty and keeps zero coordinates', () => {
+    const values = toFormValues({
+      ...ENTITY,
+      description: null,
+      attributes: {},
+      latitude: 0,
+      longitude: 0,
+    });
+
+    expect(values.description).toBe('');
+    expect(values.attributes).toEqual([]);
+    expect(values.latitude).toBe('0');
+    expect(values.longitude).toBe('0');
   });
 });
 

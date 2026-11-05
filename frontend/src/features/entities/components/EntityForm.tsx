@@ -10,11 +10,12 @@ import {
   EMPTY_ENTITY_FORM,
   entityFormSchema,
   parseDraftLocation,
+  toFormValues,
   type EntityFormValues,
   type EntityPayload,
   type MapPoint,
 } from '../formSchema';
-import { useCreateEntity } from '../hooks';
+import { useCreateEntity, useUpdateEntity } from '../hooks';
 import type { Entity } from '../schema';
 import { AttributeFields } from './AttributeFields';
 import { Panel } from './Panel';
@@ -22,21 +23,24 @@ import { Panel } from './Panel';
 const COORDINATE_DECIMALS = 6;
 
 interface EntityFormProps {
+  /** The entity to change. Without it, the form adds a new one. */
+  entity?: Entity;
   pickedPoint: MapPoint | null;
   onDraftLocationChange: (point: MapPoint | null) => void;
-  onCreated: (entity: Entity) => void;
+  onSaved: (entity: Entity) => void;
   onCancel: () => void;
 }
 
 export function EntityForm({
+  entity,
   pickedPoint,
   onDraftLocationChange,
-  onCreated,
+  onSaved,
   onCancel,
 }: EntityFormProps) {
   const form = useForm<EntityFormValues, unknown, EntityPayload>({
     resolver: zodResolver(entityFormSchema),
-    defaultValues: EMPTY_ENTITY_FORM,
+    defaultValues: entity === undefined ? EMPTY_ENTITY_FORM : toFormValues(entity),
   });
   const {
     control,
@@ -48,6 +52,8 @@ export function EntityForm({
     setValue,
   } = form;
   const create = useCreateEntity();
+  const update = useUpdateEntity();
+  const isSaving = create.isPending || update.isPending;
   const [isConfirmingCancel, setIsConfirmingCancel] = useState(false);
 
   const requestCancel = useCallback(() => {
@@ -95,12 +101,12 @@ export function EntityForm({
   }, [isConfirmingCancel, requestCancel]);
 
   const submit = handleSubmit((payload) => {
-    if (create.isPending) {
+    if (isSaving) {
       return;
     }
-    create.mutate(payload, {
-      onSuccess: onCreated,
-      onError: (error) => {
+    const callbacks = {
+      onSuccess: onSaved,
+      onError: (error: unknown) => {
         const problems = toFormErrors(error);
         for (const { name, message } of problems.fields) {
           setError(name, { message });
@@ -112,16 +118,18 @@ export function EntityForm({
           setError('root.general', { message: problems.general });
         }
       },
-    });
+    };
+    if (entity === undefined) {
+      create.mutate(payload, callbacks);
+    } else {
+      update.mutate({ id: entity.id, payload }, callbacks);
+    }
   });
 
+  const title = entity === undefined ? 'Tambah entitas' : 'Ubah entitas';
+
   return (
-    <Panel
-      label="Tambah entitas"
-      title="Tambah entitas"
-      onClose={requestCancel}
-      closeLabel="Tutup form"
-    >
+    <Panel label={title} title={title} onClose={requestCancel} closeLabel="Tutup form">
       <FormProvider {...form}>
         <form
           onSubmit={(event) => void submit(event)}
@@ -186,8 +194,8 @@ export function EntityForm({
           )}
           <div className="flex justify-between gap-2">
             <Button onClick={requestCancel}>Batal</Button>
-            <Button type="submit" variant="primary" disabled={create.isPending}>
-              {create.isPending ? 'Menyimpan…' : 'Simpan'}
+            <Button type="submit" variant="primary" disabled={isSaving}>
+              {isSaving ? 'Menyimpan…' : 'Simpan'}
             </Button>
           </div>
         </form>

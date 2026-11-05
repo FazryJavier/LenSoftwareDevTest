@@ -42,11 +42,12 @@ function failure(status: number, code: string) {
 
 const fetchStub = vi.fn<() => Promise<Response>>();
 const onClose = vi.fn();
+const onEdit = vi.fn();
 
 function renderPanel() {
   render(
     <QueryClientProvider client={new QueryClient()}>
-      <EntityDetailPanel entityId={ID} onClose={onClose} />
+      <EntityDetailPanel entityId={ID} onClose={onClose} onEdit={onEdit} />
     </QueryClientProvider>,
   );
 }
@@ -55,6 +56,7 @@ describe('EntityDetailPanel', () => {
   beforeEach(() => {
     fetchStub.mockReset();
     onClose.mockReset();
+    onEdit.mockReset();
     vi.stubGlobal('fetch', fetchStub);
   });
 
@@ -134,6 +136,16 @@ describe('EntityDetailPanel', () => {
     renderPanel();
 
     expect(await screen.findByRole('alert')).toHaveTextContent('gagal dimuat');
+  });
+
+  it('offers to edit once the entity has loaded', async () => {
+    fetchStub.mockResolvedValue(success(ENTITY));
+    renderPanel();
+    expect(screen.queryByRole('button', { name: 'Ubah' })).not.toBeInTheDocument();
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Ubah' }));
+
+    expect(onEdit).toHaveBeenCalledWith(ENTITY);
   });
 
   it('calls onClose from the close button', async () => {

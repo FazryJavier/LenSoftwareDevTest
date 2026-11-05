@@ -4,6 +4,24 @@ Semua perubahan pada proyek ini dicatat di sini, dengan entri terbaru di atas, a
 
 ## 2026-11-06
 
+### US-005: Mengubah entitas
+
+- **Jenis:** Added
+- **Apa:** Tombol Ubah pada panel detail membuka form berisi data saat ini. Lokasi dapat dipindahkan dengan klik peta, mengetik koordinat, atau menggeser marker. Batal mengembalikan panel ke detail dan marker ke posisi semula. API `PUT /api/v1/entities/{id}` mengganti seluruh data, dengan validasi yang sama seperti `POST`.
+- **Bagaimana:** `EntityForm` dipakai ulang untuk mode tambah dan ubah. Selama mengubah, marker asli disembunyikan dan digantikan marker sementara yang dapat digeser, juga pada mode tambah. Setelah disimpan, panel langsung menampilkan data dari respons server, dan peta memuat ulang markernya. `updated_at` memakai `clock_timestamp()`.
+- **File utama:** `backend/internal/store/entity_store.go`, `backend/internal/httpapi/entity_handler.go`, `frontend/src/features/entities/components/EntityForm.tsx`, `frontend/src/features/entities/usePanel.ts`, `frontend/src/features/entities/map/EntityMap.tsx`
+- **Jejak:** US-005, FR-5, FR-7, OpenSpec `add-entity-update`, branch `feat/us-005-entity-update`
+- **Pengujian:** Test Go termasuk integrasi pada PostgreSQL 18 dengan PostGIS 3.6, 149 test Vitest, dan 26 test Playwright terhadap build produksi lulus, termasuk alur ubah dengan API sungguhan, geser marker, dan data yang bertahan setelah muat ulang. Mode ubah diperiksa pada ukuran desktop dan ponsel di Edge. **Belum terbukti:** nginx dan PostgreSQL 17 dengan PostGIS 3.7 menunggu CI. Perubahan bersamaan tidak dicegah, sesuai PRD.
+
+### US-004: Selesai
+
+- **Jenis:** Changed
+- **Apa:** US-004 selesai, dan change OpenSpec-nya diarsipkan.
+- **Bagaimana:** CI pada PR #6 lulus, lalu PR masuk lewat auto-merge.
+- **File utama:** `openspec/specs/entity-create/spec.md`, `openspec/changes/archive/2026-11-06-add-entity-create/`
+- **Jejak:** US-004, FazryJavier/LenSoftwareDevTest#6
+- **Pengujian:** Semua check CI pada PR #6 lulus.
+
 ### US-004: Menambah entitas
 
 - **Jenis:** Added

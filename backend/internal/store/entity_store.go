@@ -83,6 +83,30 @@ func (s *EntityStore) Create(ctx context.Context, input domain.EntityInput) (dom
 	return entity, nil
 }
 
+// Update replaces an entity's data, or returns domain.ErrNotFound when it does not exist.
+func (s *EntityStore) Update(ctx context.Context, id string, input domain.EntityInput) (domain.Entity, error) {
+	// clock_timestamp, because now() stays at the start of the transaction.
+	rows, err := s.db.Query(ctx, `
+		UPDATE entities
+		SET name = $2, type = $3, status = $4, description = $5, attributes = $6,
+		    location = ST_SetSRID(ST_MakePoint($7, $8), 4326)::geography,
+		    updated_at = clock_timestamp()
+		WHERE id = $1::uuid
+		RETURNING `+entityColumns,
+		id, input.Name, input.Type, input.Status, input.Description, input.Attributes, input.Longitude, input.Latitude)
+	if err != nil {
+		return domain.Entity{}, fmt.Errorf("update entity: %w", err)
+	}
+	entity, err := pgx.CollectExactlyOneRow(rows, scanEntity)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return domain.Entity{}, domain.ErrNotFound
+	}
+	if err != nil {
+		return domain.Entity{}, fmt.Errorf("read updated entity: %w", err)
+	}
+	return entity, nil
+}
+
 // Get returns one entity, or domain.ErrNotFound when it does not exist.
 func (s *EntityStore) Get(ctx context.Context, id string) (domain.Entity, error) {
 	rows, err := s.db.Query(ctx, "SELECT "+entityColumns+" FROM entities WHERE id = $1::uuid", id)
