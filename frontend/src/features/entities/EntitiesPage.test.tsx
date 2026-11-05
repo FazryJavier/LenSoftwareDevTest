@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EntitiesPage } from './EntitiesPage';
 import type { Entity } from './schema';
 
@@ -501,6 +501,73 @@ describe('EntitiesPage', () => {
       fireEvent.click(marker);
 
       expect(screen.getByRole('complementary', { name: 'Ubah entitas' })).toBeInTheDocument();
+    });
+  });
+
+  describe('filtering', () => {
+    afterEach(() => {
+      window.history.replaceState(null, '', '/');
+    });
+
+    const lastListParams = () => {
+      const calls = fetchStub.mock.calls.filter(([url]) => url.includes('/entities?'));
+      return new URL(calls.at(-1)?.[0] ?? '', 'http://localhost').searchParams;
+    };
+
+    it('requests the chosen filters and writes them to the URL', async () => {
+      fetchStub.mockImplementation(() => Promise.resolve(listResponse([])));
+      renderLoadedPage();
+
+      await userEvent.selectOptions(screen.getByLabelText('Filter jenis'), 'facility');
+      await userEvent.selectOptions(screen.getByLabelText('Filter status'), 'active');
+
+      await waitFor(() => {
+        expect(lastListParams().get('status')).toBe('active');
+      });
+      expect(lastListParams().get('type')).toBe('facility');
+      expect(window.location.search).toBe('?type=facility&status=active');
+    });
+
+    it('starts from the URL', async () => {
+      window.history.replaceState(null, '', '/?type=vehicle&status=lost');
+      fetchStub.mockImplementation(() => Promise.resolve(listResponse([])));
+
+      renderLoadedPage();
+
+      expect(screen.getByLabelText('Filter jenis')).toHaveValue('vehicle');
+      expect(screen.getByLabelText('Filter status')).toHaveValue('');
+      await waitFor(() => {
+        expect(lastListParams().get('type')).toBe('vehicle');
+      });
+      expect(lastListParams().has('status')).toBe(false);
+    });
+
+    it('shows Reset only while a filter is active, and it clears them', async () => {
+      window.history.replaceState(null, '', '/?type=vehicle');
+      fetchStub.mockImplementation(() => Promise.resolve(listResponse([entity({})])));
+      renderLoadedPage();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Reset' }));
+
+      expect(screen.getByLabelText('Filter jenis')).toHaveValue('');
+      expect(screen.queryByRole('button', { name: 'Reset' })).not.toBeInTheDocument();
+      expect(window.location.search).toBe('');
+      await waitFor(() => {
+        expect(lastListParams().has('type')).toBe(false);
+      });
+    });
+
+    it('offers to clear the filter when nothing matches', async () => {
+      window.history.replaceState(null, '', '/?type=vehicle');
+      fetchStub.mockImplementation(() => Promise.resolve(listResponse([])));
+      renderLoadedPage();
+
+      expect(await screen.findByText(/Tidak ada entitas yang cocok/)).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Tambah entitas' })).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Hapus filter' }));
+
+      expect(await screen.findByText('Belum ada entitas di area ini.')).toBeInTheDocument();
     });
   });
 

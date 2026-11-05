@@ -678,6 +678,80 @@ test.describe('deleting an entity through the real API', () => {
   });
 });
 
+test.describe('filtering through the real API', () => {
+  test('narrows the markers, survives a reload, and resets', async ({ page, request }) => {
+    const stamp = String(Date.now());
+    const truckName = `E2E Filter Truk ${stamp}`;
+    const sensorName = `E2E Filter Sensor ${stamp}`;
+    for (const [name, type, status, longitude] of [
+      [truckName, 'vehicle', 'maintenance', 103],
+      [sensorName, 'iot_device', 'active', 125],
+    ] as const) {
+      const created = await request.post('/api/v1/entities', {
+        data: { name, type, status, latitude: -9, longitude },
+      });
+      expect(created.status()).toBe(201);
+    }
+    await stubBaseMap(page);
+    await page.goto('/');
+    const truck = page.getByRole('button', { name: new RegExp(truckName) });
+    const sensor = page.getByRole('button', { name: new RegExp(sensorName) });
+    await expect(truck).toBeVisible();
+    await expect(sensor).toBeVisible();
+
+    await page.getByLabel('Filter jenis').selectOption('vehicle');
+
+    await expect(sensor).toBeHidden();
+    await expect(truck).toBeVisible();
+    await expect(page).toHaveURL(/type=vehicle/);
+
+    await page.reload();
+
+    await expect(truck).toBeVisible();
+    await expect(sensor).toBeHidden();
+    await expect(page.getByLabel('Filter jenis')).toHaveValue('vehicle');
+
+    await page.getByLabel('Filter status').selectOption('active');
+    await expect(truck).toBeHidden();
+    await expect(page).toHaveURL(/status=active/);
+
+    await page.getByRole('button', { name: 'Reset' }).click();
+
+    await expect(truck).toBeVisible();
+    await expect(sensor).toBeVisible();
+    await expect(page).not.toHaveURL(/type=/);
+  });
+
+  test('ignores unknown values in a link', async ({ page }) => {
+    const requests: string[] = [];
+    await stubBaseMap(page);
+    await page.route(/\/api\/v1\/entities\?/, (route) => {
+      requests.push(route.request().url());
+      return fulfillList(route, [ENTITY]);
+    });
+
+    await page.goto('/?type=spaceship');
+
+    await expect(page.getByRole('button', { name: /Truk Logistik/ })).toBeVisible();
+    await expect(page.getByLabel('Filter jenis')).toHaveValue('');
+    expect(requests.some((url) => url.includes('spaceship'))).toBe(false);
+  });
+
+  test('the API filters and rejects unknown values', async ({ request }) => {
+    const filtered = await request.get('/api/v1/entities?type=vehicle,other&status=active');
+    expect(filtered.status()).toBe(200);
+
+    const invalid = await request.get('/api/v1/entities?type=spaceship&status=lost');
+    expect(invalid.status()).toBe(400);
+    expect(await invalid.json()).toMatchObject({
+      errors: [
+        { field: 'type', code: 'invalid_query' },
+        { field: 'status', code: 'invalid_query' },
+      ],
+    });
+  });
+});
+
 test('the real API rejects an invalid entity ID through the proxy', async ({ request }) => {
   const response = await request.get('/api/v1/entities/not-a-uuid');
 

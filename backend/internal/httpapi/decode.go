@@ -38,6 +38,20 @@ func parseListQuery(query url.Values) (domain.ListFilter, []errorItem) {
 		}
 		filter.BoundingBox = box
 	}
+	if query.Has("type") {
+		values, ok := parseEnumList(query.Get("type"), domain.IsEntityType)
+		if !ok {
+			problems = append(problems, queryError("type", "type must be a comma-separated list of known entity types."))
+		}
+		filter.Types = values
+	}
+	if query.Has("status") {
+		values, ok := parseEnumList(query.Get("status"), domain.IsEntityStatus)
+		if !ok {
+			problems = append(problems, queryError("status", "status must be a comma-separated list of known entity statuses."))
+		}
+		filter.Statuses = values
+	}
 	if query.Has("page") {
 		page, ok := parseBoundedInt(query.Get("page"), 1, maxPage)
 		if !ok {
@@ -58,6 +72,16 @@ func parseListQuery(query url.Values) (domain.ListFilter, []errorItem) {
 
 func queryError(field, message string) errorItem {
 	return errorItem{Field: &field, Code: codeInvalidQuery, Message: message}
+}
+
+func parseEnumList(raw string, isKnown func(string) bool) ([]string, bool) {
+	values := strings.Split(raw, ",")
+	for _, value := range values {
+		if !isKnown(value) {
+			return nil, false
+		}
+	}
+	return values, true
 }
 
 func parseBoundedInt(raw string, minimum, maximum int) (int, bool) {

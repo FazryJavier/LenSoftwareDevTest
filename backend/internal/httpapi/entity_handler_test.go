@@ -128,13 +128,14 @@ func TestListEntities_Parameters_AreForwardedToStore(t *testing.T) {
 	store := &fakeEntityStore{}
 
 	rec := perform(t, NewRouter(entityDeps(store)), http.MethodGet,
-		"/api/v1/entities?bbox=106,-7,108,-6&page=2&per_page=500", nil)
+		"/api/v1/entities?bbox=106,-7,108,-6&type=vehicle&status=active,inactive&page=2&per_page=500", nil)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d", rec.Code)
 	}
 	filter := store.lastFilter
-	if filter.Page != 2 || filter.PerPage != 500 || filter.BoundingBox == nil || filter.BoundingBox.MaxLongitude != 108 {
+	if filter.Page != 2 || filter.PerPage != 500 || filter.BoundingBox == nil || filter.BoundingBox.MaxLongitude != 108 ||
+		len(filter.Types) != 1 || len(filter.Statuses) != 2 {
 		t.Errorf("filter = %+v", filter)
 	}
 }

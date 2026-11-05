@@ -1,6 +1,6 @@
 # Guide
 
-> **Status:** bagian "Memfilter" belum tersedia. Bagian lain pada §2 dan §3 menggambarkan perilaku yang direncanakan dan harus diperiksa kembali setelah fitur selesai. Status terbaru ada di [README](../README.md#status).
+> **Status:** semua perilaku pada §2 dan §3 sudah tersedia. Status terbaru ada di [README](../README.md#status).
 
 ## 1. Menjalankan aplikasi
 

@@ -4,11 +4,13 @@ import { Button } from '../../components/ui/Button';
 import { Toast } from '../../components/ui/Toast';
 import { toBbox, type MapBounds } from './bbox';
 import { EntityDetailPanel } from './components/EntityDetailPanel';
+import { EntityFilters } from './components/EntityFilters';
 import { EntityForm } from './components/EntityForm';
 import type { MapPoint } from './formSchema';
 import { useEntities } from './hooks';
 import { EntityMap } from './map/EntityMap';
 import type { Entity } from './schema';
+import { useEntityFilters } from './useEntityFilters';
 import { usePanel } from './usePanel';
 
 const VIEW_CHANGE_DEBOUNCE_MS = 300;
@@ -40,7 +42,9 @@ function useMapArea() {
 
 export function EntitiesPage({ mapStyleUrl }: { mapStyleUrl: string }) {
   const area = useMapArea();
-  const entities = useEntities(area.bbox);
+  const { filters, setFilters } = useEntityFilters();
+  const entities = useEntities(area.bbox, filters);
+  const isFiltering = filters.type !== null || filters.status !== null;
   const panel = usePanel();
   const [pickedPoint, setPickedPoint] = useState<MapPoint | null>(null);
   const [draftLocation, setDraftLocation] = useState<MapPoint | null>(null);
@@ -64,8 +68,9 @@ export function EntitiesPage({ mapStyleUrl }: { mapStyleUrl: string }) {
 
   return (
     <div className="flex h-screen flex-col">
-      <header className="flex items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3">
         <h1 className="text-lg font-semibold">GeoEntity Manager</h1>
+        <EntityFilters filters={filters} onChange={setFilters} />
         <Button
           ref={addButton}
           variant="primary"
@@ -107,7 +112,23 @@ export function EntitiesPage({ mapStyleUrl }: { mapStyleUrl: string }) {
               Terlalu banyak entitas di area ini. Perbesar peta untuk melihat semuanya.
             </Banner>
           )}
-          {isEmpty && !panel.isFormOpen && (
+          {isEmpty && !panel.isFormOpen && isFiltering && (
+            <Banner
+              tone="info"
+              action={
+                <Button
+                  onClick={() => {
+                    setFilters({ type: null, status: null });
+                  }}
+                >
+                  Hapus filter
+                </Button>
+              }
+            >
+              Tidak ada entitas yang cocok dengan filter di area ini.
+            </Banner>
+          )}
+          {isEmpty && !panel.isFormOpen && !isFiltering && (
             <Banner
               tone="info"
               action={

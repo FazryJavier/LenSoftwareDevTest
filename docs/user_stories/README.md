@@ -9,9 +9,9 @@ Setiap fitur memiliki satu file `US-{nomor}.md`. Implementasinya dilacak melalui
 | [US-003](US-003.md) | Melihat detail entitas | Must | Selesai | `add-entity-detail` |
 | [US-004](US-004.md) | Menambah entitas | Must | Selesai | `add-entity-create` |
 | [US-005](US-005.md) | Mengubah entitas | Must | Selesai | `add-entity-update` |
-| [US-006](US-006.md) | Menghapus entitas | Must | Sedang dikerjakan | `add-entity-delete` |
-| [US-007](US-007.md) | Validasi lintas layer | Must | Sedang dikerjakan | `add-validation-coverage` |
-| [US-008](US-008.md) | Filter jenis dan status | Should | Belum mulai | `add-entity-filters` |
+| [US-006](US-006.md) | Menghapus entitas | Must | Selesai | `add-entity-delete` |
+| [US-007](US-007.md) | Validasi lintas layer | Must | Selesai | `add-validation-coverage` |
+| [US-008](US-008.md) | Filter jenis dan status | Should | Sedang dikerjakan | `add-entity-filters` |
 
 **Nilai status:** Belum mulai, Sedang dikerjakan, Selesai, Dipotong.
 

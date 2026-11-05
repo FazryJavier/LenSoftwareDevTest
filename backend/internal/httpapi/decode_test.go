@@ -38,6 +38,10 @@ func TestParseListQuery_ValidValues_AreAccepted(t *testing.T) {
 		{"world bbox", "bbox=-180,-90,180,90"},
 		{"bbox containing zero", "bbox=-1,-1,0,0"},
 		{"unknown parameter is ignored", "other=value"},
+		{"one type", "type=vehicle"},
+		{"every type", "type=vehicle,iot_device,facility,other"},
+		{"one status", "status=active"},
+		{"every status", "status=active,inactive,maintenance"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -73,6 +77,14 @@ func TestParseListQuery_InvalidValues_NameTheField(t *testing.T) {
 		{"per_page zero", "per_page=0", "per_page"},
 		{"per_page above limit", "per_page=501", "per_page"},
 		{"per_page text", "per_page=abc", "per_page"},
+		{"type empty", "type=", "type"},
+		{"type unknown", "type=spaceship", "type"},
+		{"type partly unknown", "type=vehicle,spaceship", "type"},
+		{"type with a trailing comma", "type=vehicle,", "type"},
+		{"type in the wrong case", "type=VEHICLE", "type"},
+		{"status empty", "status=", "status"},
+		{"status unknown", "status=lost", "status"},
+		{"status partly unknown", "status=active,lost", "status"},
 		{"bbox empty", "bbox=", "bbox"},
 		{"bbox three parts", "bbox=1,2,3", "bbox"},
 		{"bbox five parts", "bbox=1,2,3,4,5", "bbox"},
@@ -101,6 +113,19 @@ func TestParseListQuery_InvalidValues_NameTheField(t *testing.T) {
 				t.Errorf("field = %v, want %q", problems[0].Field, tt.field)
 			}
 		})
+	}
+}
+
+func TestParseListQuery_Enums_AreSplit(t *testing.T) {
+	filter, problems := parseListQuery(mustQuery(t, "type=vehicle,other&status=active"))
+	if problems != nil {
+		t.Fatalf("problems = %+v", problems)
+	}
+	if len(filter.Types) != 2 || filter.Types[0] != "vehicle" || filter.Types[1] != "other" {
+		t.Errorf("types = %v", filter.Types)
+	}
+	if len(filter.Statuses) != 1 || filter.Statuses[0] != "active" {
+		t.Errorf("statuses = %v", filter.Statuses)
 	}
 }
 
