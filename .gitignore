@@ -1,0 +1,26 @@
+# Secret lokal. Contohnya ada di .env.example.
+.env
+.env.*
+!.env.example
+
+# Pengaturan pribadi Claude Code di mesin lokal, bukan bagian dari proyek.
+# .claude/ dan openspec/ lainnya sengaja di-commit agar dapat diperiksa penilai.
+.claude/settings.local.json
+
+# Frontend
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+
+# Backend
+backend/bin/
+*.test
+*.out
+
+# Log dan sistem operasi
+*.log
+.DS_Store
+Thumbs.db

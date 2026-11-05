@@ -1,0 +1,87 @@
+name: Autofix
+
+# Memperbaiki hal mekanis pada Pull Request: format dan lint yang dapat diperbaiki otomatis.
+# Tidak mengubah logika dan tidak menyentuh file di luar backend/ dan frontend/.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: autofix-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  autofix:
+    name: Apply automatic fixes
+    # Kode dari fork tidak boleh berjalan dengan token yang memiliki izin tulis.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'github-actions[bot]' &&
+      github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        if: hashFiles('backend/go.mod') != ''
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - name: Fix backend
+        if: hashFiles('backend/go.mod') != ''
+        working-directory: backend
+        run: |
+          gofmt -w .
+          go mod tidy
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: hashFiles('frontend/package.json') != ''
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        if: hashFiles('frontend/package.json') != ''
+        working-directory: frontend
+        run: npm ci --ignore-scripts
+      - name: Fix frontend lint
+        if: hashFiles('frontend/package.json') != ''
+        working-directory: frontend
+        # Sisa error yang tidak bisa diperbaiki otomatis tetap dilaporkan oleh workflow CI.
+        continue-on-error: true
+        run: npm run lint:fix
+      - name: Fix frontend format
+        if: hashFiles('frontend/package.json') != ''
+        working-directory: frontend
+        run: npm run format
+
+      - name: Commit fixes and rerun CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          for dir in backend frontend; do
+            if [ -d "$dir" ]; then
+              git add --update -- "$dir"
+            fi
+          done
+          if git diff --cached --quiet; then
+            echo "No fixes needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "style: apply automatic formatting"
+          git push origin "HEAD:refs/heads/${HEAD_REF}"
+          # Push dari GITHUB_TOKEN tidak memicu workflow, jadi CI dipanggil secara eksplisit.
+          gh workflow run ci.yml --ref "$HEAD_REF"

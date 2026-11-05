@@ -1,0 +1,396 @@
+openapi: 3.1.0
+info:
+  title: GeoEntity Manager API
+  version: 1.0.0
+  description: REST API untuk mengelola entitas yang memiliki lokasi geografis.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Lokal
+security: []
+tags:
+  - name: Entities
+    description: Pengelolaan entitas
+  - name: System
+    description: Status layanan
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      tags: [System]
+      summary: Cek kesehatan layanan dan database
+      responses:
+        '200':
+          description: Layanan sehat
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptySuccess'
+        '503':
+          $ref: '#/components/responses/Error'
+  /entities:
+    get:
+      operationId: listEntities
+      tags: [Entities]
+      summary: Daftar entitas
+      parameters:
+        - name: type
+          in: query
+          description: Satu atau lebih jenis, dipisah koma.
+          schema:
+            type: string
+          example: vehicle,facility
+        - name: status
+          in: query
+          description: Satu atau lebih status, dipisah koma.
+          schema:
+            type: string
+          example: active
+        - name: bbox
+          in: query
+          description: Area peta dalam format minLng,minLat,maxLng,maxLat.
+          schema:
+            type: string
+          example: 106.6,-7.1,107.8,-6.1
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 100
+      responses:
+        '200':
+          description: Daftar entitas
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityListSuccess'
+        '400':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+    post:
+      operationId: createEntity
+      tags: [Entities]
+      summary: Membuat entitas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntityInput'
+      responses:
+        '201':
+          description: Entitas dibuat
+          headers:
+            Location:
+              description: URL entitas baru.
+              schema:
+                type: string
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntitySuccess'
+        '400':
+          $ref: '#/components/responses/Error'
+        '413':
+          $ref: '#/components/responses/Error'
+        '415':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+  /entities/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getEntity
+      tags: [Entities]
+      summary: Detail entitas
+      responses:
+        '200':
+          description: Detail entitas
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntitySuccess'
+        '400':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: updateEntity
+      tags: [Entities]
+      summary: Mengganti seluruh data entitas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntityInput'
+      responses:
+        '200':
+          description: Entitas diperbarui
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntitySuccess'
+        '400':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '413':
+          $ref: '#/components/responses/Error'
+        '415':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+    delete:
+      operationId: deleteEntity
+      tags: [Entities]
+      summary: Menghapus entitas
+      responses:
+        '200':
+          description: Entitas dihapus
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptySuccess'
+        '400':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '500':
+          $ref: '#/components/responses/Error'
+components:
+  headers:
+    RequestId:
+      description: Identifier untuk menelusuri request di log.
+      schema:
+        type: string
+  responses:
+    Error:
+      description: Request gagal
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    EntityType:
+      type: string
+      enum: [vehicle, iot_device, facility, other]
+    EntityStatus:
+      type: string
+      enum: [active, inactive, maintenance]
+    EntityInput:
+      type: object
+      additionalProperties: false
+      required: [name, type, status, latitude, longitude]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        type:
+          $ref: '#/components/schemas/EntityType'
+        status:
+          $ref: '#/components/schemas/EntityStatus'
+        description:
+          type:
+            - string
+            - 'null'
+          maxLength: 500
+        attributes:
+          $ref: '#/components/schemas/Attributes'
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+    Attributes:
+      type: object
+      maxProperties: 20
+      propertyNames:
+        pattern: '^[A-Za-z0-9_.-]{1,50}$'
+      additionalProperties:
+        type: string
+        maxLength: 200
+    Entity:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - type
+        - status
+        - description
+        - attributes
+        - latitude
+        - longitude
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/EntityType'
+        status:
+          $ref: '#/components/schemas/EntityStatus'
+        description:
+          type:
+            - string
+            - 'null'
+        attributes:
+          $ref: '#/components/schemas/Attributes'
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    PaginationMeta:
+      type: object
+      additionalProperties: false
+      required: [page, per_page, total, total_pages]
+      properties:
+        page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+    ErrorItem:
+      type: object
+      additionalProperties: false
+      required: [field, code, message]
+      properties:
+        field:
+          type:
+            - string
+            - 'null'
+        code:
+          type: string
+        message:
+          type: string
+    EnvelopeBase:
+      type: object
+      required: [code, success, message, data, errors, meta]
+      properties:
+        code:
+          type: integer
+        success:
+          type: boolean
+        message:
+          type: string
+    EmptySuccess:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            success:
+              const: true
+            data:
+              type: 'null'
+            errors:
+              type: 'null'
+            meta:
+              type: 'null'
+    EntitySuccess:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            success:
+              const: true
+            data:
+              $ref: '#/components/schemas/Entity'
+            errors:
+              type: 'null'
+            meta:
+              type: 'null'
+    EntityListSuccess:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            success:
+              const: true
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Entity'
+            errors:
+              type: 'null'
+            meta:
+              $ref: '#/components/schemas/PaginationMeta'
+    ErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            success:
+              const: false
+            data:
+              type: 'null'
+            errors:
+              type: array
+              minItems: 1
+              items:
+                $ref: '#/components/schemas/ErrorItem'
+            meta:
+              type: 'null'

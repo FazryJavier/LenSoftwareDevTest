@@ -1,0 +1,31 @@
+schema: spec-driven
+
+context: |
+  Take-home test dengan tenggat 2 hari. Setiap change memetakan tepat satu user story di docs/user_stories/.
+  Tulis artefak dalam Bahasa Indonesia, tetapi pertahankan kata kunci format OpenSpec dalam bahasa Inggris
+  (ADDED Requirements, Requirement, Scenario, SHALL, WHEN, THEN) agar lolos validasi.
+  Sumber kebenaran: docs/PRD.md untuk perilaku dan aturan validasi, docs/openapi.yaml untuk kontrak API,
+  docs/ARCHITECTURE.md untuk struktur, docs/DATABASE.md untuk skema, docs/DESIGN_SYSTEM.md untuk UI.
+  Prioritaskan kebutuhan pada soal; jangan menambah fitur di luar docs/PRD.md.
+
+rules:
+  proposal:
+    - Sebutkan ID user story dan ID kebutuhan (FR atau NFR) yang dipenuhi
+    - Sebutkan hal yang tidak termasuk dalam change ini
+  specs:
+    - Setiap kriteria penerimaan user story harus memiliki minimal satu Scenario
+  tasks:
+    - Pasangkan setiap task implementasi dengan test untuk jalur sukses, gagal, dan nilai batas
+    - Tutup dengan task menjalankan pemeriksaan lokal dan memperbarui CHANGELOG.md, status US, README, dan docs/AI_USAGE.md
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing

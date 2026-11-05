@@ -1,0 +1,7 @@
+version: 2
+updates:
+  # Ekosistem gomod dan npm ditambahkan pada US-001, setelah backend/ dan frontend/ tersedia.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
