@@ -59,6 +59,7 @@ func run(logger *slog.Logger) error {
 		Addr: cfg.HTTPAddr,
 		Handler: httpapi.NewRouter(httpapi.Dependencies{
 			Health:         pool,
+			Entities:       store.NewEntityStore(pool),
 			AllowedOrigins: cfg.CORSAllowedOrigins,
 			Logger:         logger,
 		}),

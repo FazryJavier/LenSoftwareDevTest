@@ -63,7 +63,7 @@ Versi dicek pada 5 November 2026. Nilai akhir dikunci oleh `package-lock.json` d
 
 ## 3. Hasil cek kompatibilitas
 
-Temuan dari pemeriksaan metadata registry pada 5 November 2026. Pada US-001, kombinasi frontend terbukti lewat instalasi, lint, test, dan build. Backend terbukti lewat build dan test terhadap PostgreSQL 18 dengan PostGIS 3.6. Image Docker dan versi PostgreSQL 17 dengan PostGIS 3.7 belum dibuktikan di lokal, karena Docker Desktop gagal berjalan di mesin pengembangan.
+Temuan dari pemeriksaan metadata registry pada 5 November 2026. Pada US-001, kombinasi frontend terbukti lewat instalasi, lint, test, dan build. Backend terbukti lewat build dan test terhadap PostgreSQL 18 dengan PostGIS 3.6. Image Docker serta PostgreSQL 17 dengan PostGIS 3.7 terbukti oleh CI pada Linux.
 
 Versi terkunci saat ini: `pgx` v5.12.0, `goose` v3.29.0, dan versi frontend pada `frontend/package-lock.json`.
 
@@ -75,6 +75,7 @@ Versi terkunci saat ini: `pgx` v5.12.0, `goose` v3.29.0, dan versi frontend pada
 | `@hookform/resolvers` 7 mendukung Zod `^4` dan React Hook Form `^7.55` | Sesuai |
 | `@vis.gl/react-maplibre` 8 membutuhkan `maplibre-gl >=4` | Sesuai dengan MapLibre 6 |
 | `@testing-library/react` 16 mendukung React `^19` | Sesuai |
+| Pre-bundling Vite memisahkan `maplibre-gl` 6 dari file worker-nya | `optimizeDeps.exclude` pada `vite.config.ts` |
 | Tag `postgis/postgis:17-3.7` tersedia di Docker Hub, hanya untuk `linux/amd64` | Dipakai untuk Compose dan CI; Compose menyetel `platform: linux/amd64` agar berjalan lewat emulasi di mesin ARM |
 | `tiles.openfreemap.org/styles/liberty` membalas HTTP 200 | Dipakai sebagai style default |
 

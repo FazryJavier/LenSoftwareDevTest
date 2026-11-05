@@ -44,7 +44,7 @@ Semua respons JSON memakai bentuk berikut.
 | `type` | semua | Satu atau lebih nilai enum, dipisah koma |
 | `status` | semua | Satu atau lebih nilai enum, dipisah koma |
 | `bbox` | semua | `minLng,minLat,maxLng,maxLat`; minimum harus lebih kecil dari maksimum |
-| `page` | 1 | Bilangan bulat ≥ 1 |
+| `page` | 1 | Bilangan bulat 1–1000000 |
 | `per_page` | 100 | Bilangan bulat 1–500 |
 
 Urutan hasil: `created_at` menurun, lalu `id` menurun. `bbox` yang melintasi antimeridian (garis bujur 180°) belum didukung.

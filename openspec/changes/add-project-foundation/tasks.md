@@ -27,14 +27,14 @@
 ## 4. Container
 
 - [ ] 4.1 Buat `backend/Dockerfile` dan `frontend/Dockerfile` multi-stage dan non-root, serta `nginx.conf`; verifikasi dengan `docker compose build` dan `whoami` di tiap container
-- [ ] 4.2 Buat `docker-compose.yml` dengan healthcheck, `depends_on`, volume bernama, port dari `.env`, dan `platform: linux/amd64` untuk database; verifikasi dengan `docker compose up --build --wait` memakai salinan `.env.example`
+- [x] 4.2 Buat `docker-compose.yml` dengan healthcheck, `depends_on`, volume bernama, port dari `.env`, dan `platform: linux/amd64` untuk database; verifikasi dengan `docker compose up --build --wait` memakai salinan `.env.example`
 - [ ] 4.3 Buktikan 503 tanpa detail internal dengan `docker compose stop db`, lalu `curl` ke `/api/v1/health`
 - [ ] 4.4 Buktikan data bertahan: tambahkan satu baris lewat seed, jalankan `docker compose down`, jalankan kembali, lalu periksa barisnya masih ada
 - [ ] 4.5 Buktikan database kosong: jalankan Compose dengan nama project terpisah untuk mendapat volume baru, periksa tabel `entities`, lalu hapus hanya volume project uji itu setelah meminta konfirmasi pemilik proyek
 
 ## 5. Test end-to-end dan otomasi
 
-- [ ] 5.1 Buat `playwright.config.ts` dan test yang membuka halaman serta melihat status backend terhubung; verifikasi dengan `npm run test:e2e` terhadap Compose
+- [x] 5.1 Buat `playwright.config.ts` dan test yang membuka halaman serta melihat status backend terhubung; verifikasi dengan `npm run test:e2e` terhadap Compose
 - [x] 5.2 Tambahkan ekosistem `gomod` dan `npm` ke `.github/dependabot.yml`; verifikasi dengan actionlint yang tetap lulus dan YAML yang valid
 
 ## 6. Dokumen
@@ -46,7 +46,7 @@
 ## 7. Pemeriksaan akhir
 
 - [x] 7.1 Jalankan semua pemeriksaan backend dan frontend pada bagian Perintah di `CLAUDE.md`, dan laporkan yang tidak dapat dijalankan
-- [ ] 7.2 Setelah pemilik proyek menyetujui push, buka Pull Request dan buktikan job `backend`, `frontend`, `e2e`, `changelog`, `secrets`, `docs`, dan `ci-success` lulus
+- [x] 7.2 Setelah pemilik proyek menyetujui push, buka Pull Request dan buktikan job `backend`, `frontend`, `e2e`, `changelog`, `secrets`, `docs`, dan `ci-success` lulus
 
 ## Workflow follow-up
 

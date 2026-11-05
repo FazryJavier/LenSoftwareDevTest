@@ -12,3 +12,7 @@ updates:
     directory: /frontend
     schedule:
       interval: weekly
+    ignore:
+      # typescript-eslint does not support TypeScript 7 yet. See docs/ITA.md section 3.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']

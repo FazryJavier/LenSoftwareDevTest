@@ -145,10 +145,10 @@ frontend/
 │   │   └── errors.ts              # ApiError
 │   ├── lib/env.ts                 # Satu-satunya pembaca import.meta.env
 │   ├── components/ui/             # Button, Field, Select, Badge, Dialog, Toast, Banner
-│   ├── features/system/           # Status koneksi backend
 │   ├── features/entities/
 │   │   ├── EntitiesPage.tsx       # Menyusun halaman dan memegang state panel
 │   │   ├── api.ts                 # Fungsi endpoint entitas
+│   │   ├── bbox.ts                # Batas peta menjadi parameter API
 │   │   ├── hooks.ts               # Hook TanStack Query dan query key
 │   │   ├── schema.ts              # Skema Zod dan tipe turunannya
 │   │   ├── constants.ts           # Label dan ikon per jenis dan status
@@ -196,6 +196,7 @@ File `.env` di root hanya dibaca oleh Docker Compose. `.env` tidak di-commit, da
 | `CORS_ALLOWED_ORIGINS` | Backend | Tidak | Dipisah koma; kosong berarti tidak ada origin lain yang diizinkan; `*` ditolak |
 | `TEST_DATABASE_URL` | Test integrasi | Hanya untuk test integrasi | Nama database wajib berakhiran `_test` |
 | `VITE_MAP_STYLE_URL` | Frontend, saat build | Ya | URL style peta |
+| `API_PROXY_TARGET` | Vite dev server | Tidak | Default `http://localhost:8080`; tidak dipakai di Compose |
 
 **Aturan**
 

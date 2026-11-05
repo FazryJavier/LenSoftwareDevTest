@@ -33,6 +33,10 @@ func testDatabase(t *testing.T) (context.Context, string, *pgxpool.Pool) {
 	t.Helper()
 	databaseURL := os.Getenv("TEST_DATABASE_URL")
 	if databaseURL == "" {
+		// A skip would otherwise report success in CI without testing anything.
+		if os.Getenv("CI") != "" {
+			t.Fatal("TEST_DATABASE_URL must be set in CI")
+		}
 		t.Skip("TEST_DATABASE_URL is not set")
 	}
 	if err := checkTestDatabaseName(databaseURL); err != nil {
@@ -93,7 +97,7 @@ func TestMigrate_CreatesEntitiesTableAndIndexes(t *testing.T) {
 
 	for _, relation := range []string{
 		"entities",
-		"entities_location_gist_idx",
+		"entities_location_geometry_gist_idx",
 		"entities_type_status_idx",
 		"entities_created_at_id_idx",
 	} {

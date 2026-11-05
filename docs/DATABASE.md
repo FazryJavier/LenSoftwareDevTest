@@ -59,6 +59,8 @@ DROP TABLE entities;
 
 `Down` hanya boleh dijalankan secara sadar pada database lokal karena menghapus data. Ekstensi `postgis` sengaja tidak dihapus karena mungkin dipakai objek lain.
 
+Migrasi `00002_use_geometry_location_index.sql` mengganti `entities_location_gist_idx` dengan indeks ekspresi `entities_location_geometry_gist_idx` pada `(location::geometry)`. Area peta adalah persegi bujur-lintang, sedangkan indeks `geography` membandingkan kotak 3D geosentris, sehingga tidak cocok untuk query ini.
+
 ## 4. Pola query
 
 ```sql
@@ -71,7 +73,7 @@ FROM entities
 WHERE id = $1;
 
 -- Filter area peta
-WHERE location && ST_MakeEnvelope($1, $2, $3, $4, 4326)::geography
+WHERE ST_Intersects(location::geometry, ST_MakeEnvelope($1, $2, $3, $4, 4326))
 ORDER BY created_at DESC, id DESC
 LIMIT $5 OFFSET $6;
 

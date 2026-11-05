@@ -12,7 +12,7 @@ Memakai PostgreSQL 17 dengan PostGIS 3.7. Koordinat disimpan dalam satu kolom `g
 
 ## Konsekuensi
 
-- Query `bbox` memakai indeks spasial dan tidak perlu menghitung koordinat secara manual.
+- Query `bbox` memakai indeks spasial pada `location::geometry` dan tidak perlu menghitung koordinat secara manual. Tipe `geography` dipertahankan untuk integritas koordinat. Indeksnya memakai geometry karena area peta adalah persegi bujur-lintang.
 - Koordinat tidak memiliki dua sumber kebenaran.
 - Reviewer membutuhkan Docker, karena PostGIS lebih sulit dipasang langsung di mesin.
 - Lapisan `store` harus menangani urutan `longitude, latitude` dengan benar.

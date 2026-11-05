@@ -2,13 +2,22 @@
 package httpapi
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
+
+	"github.com/FazryJavier/LenSoftwareDevTest/backend/internal/domain"
 )
+
+// EntityStore is the persistence the entity handlers need.
+type EntityStore interface {
+	List(ctx context.Context, filter domain.ListFilter) (domain.EntityPage, error)
+}
 
 // Dependencies are the collaborators the HTTP layer needs.
 type Dependencies struct {
 	Health         HealthChecker
+	Entities       EntityStore
 	AllowedOrigins []string
 	Logger         *slog.Logger
 }
@@ -17,6 +26,7 @@ type Dependencies struct {
 func NewRouter(deps Dependencies) http.Handler {
 	mux := http.NewServeMux()
 	mux.Handle("GET /api/v1/health", healthHandler(deps.Health, deps.Logger))
+	mux.Handle("GET /api/v1/entities", listEntitiesHandler(deps.Entities, deps.Logger))
 
 	return withMiddleware(withEnvelopeFallback(mux), deps)
 }
