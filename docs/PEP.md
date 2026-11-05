@@ -15,7 +15,7 @@ Soal memberi waktu **2 hari setelah soal diterima**. File soal tercatat pada 5 N
 | 2. Lihat data | API list dan detail, peta, panel detail | US-002, US-003 | Selesai |
 | 3. Kelola data | Tambah, ubah, hapus | US-004, US-005, US-006 | Selesai |
 | 4. Validasi | Pengujian lintas layer untuk semua aturan | US-007 | Selesai |
-| 5. Tambahan | Filter jenis dan status | US-008 | Sedang dikerjakan |
+| 5. Tambahan | Filter jenis dan status | US-008 | Selesai |
 | 6. Penyelesaian | Uji end-to-end, finalisasi dokumen, pengiriman | — | Belum mulai |
 
 Validasi dibangun bersama fitur tambah dan ubah pada fase 3. Fase 4 memastikan seluruh aturan [PRD §5](PRD.md#5-aturan-validasi) sudah tercakup.

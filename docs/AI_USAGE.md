@@ -41,7 +41,7 @@ Alur dan pembagian peran dijelaskan di [WORKFLOW](WORKFLOW.md#2-pembagian-peran)
 | 2026-11-06 | US-005 | Menulis proposal, kode, test, dan dokumen; memeriksa mode ubah di browser | Menyetujui proposal | CI lulus, dan PR masuk lewat auto-merge |
 | 2026-11-06 | US-006 | Menulis proposal, kode, test, dan dokumen | Menyetujui US-006 sampai US-008 sekaligus | Lihat bagian Pengujian di CHANGELOG |
 | 2026-11-06 | US-007 | Menulis proposal, kasus bersama, koleksi Postman, dan dokumen | Menyetujui US-006 sampai US-008 sekaligus | Lihat bagian Pengujian di CHANGELOG. CI lulus pada PR #9 |
-| 2026-11-06 | US-008 | Menulis proposal, kode, test, dan dokumen, serta menyelidiki kegagalan 413 lewat proxy | Menyetujui US-006 sampai US-008 sekaligus | Lihat bagian Pengujian di CHANGELOG. CI menunggu |
+| 2026-11-06 | US-008 | Menulis proposal, kode, test, dan dokumen, serta menyelidiki kegagalan 413 lewat proxy | Menyetujui US-006 sampai US-008 sekaligus | Lihat bagian Pengujian di CHANGELOG. CI lulus pada PR #10 |
 
 ## Temuan yang dipengaruhi AI
 

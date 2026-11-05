@@ -4,6 +4,15 @@ Semua perubahan pada proyek ini dicatat di sini, dengan entri terbaru di atas, a
 
 ## 2026-11-06
 
+### US-008: Selesai
+
+- **Jenis:** Changed
+- **Apa:** US-008 selesai, dan change OpenSpec-nya diarsipkan.
+- **Bagaimana:** CI pada PR #10 lulus, lalu PR masuk lewat auto-merge.
+- **File utama:** `openspec/specs/`, `openspec/changes/archive/`
+- **Jejak:** US-008, FazryJavier/LenSoftwareDevTest#10
+- **Pengujian:** Semua check CI pada PR #10 lulus, termasuk `End-to-end` dan `CI success`.
+
 ### US-008: Filter jenis dan status
 
 - **Jenis:** Added
